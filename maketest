@@ -1,0 +1,22 @@
+
+OBJECTS = simpleTest.o stringTools.o
+DEPENDS = stringtools.h
+MAIN = simpleTest
+
+CC = gcc
+CFLAGS = -std=gnu99
+LDFLAGS = -lm
+
+$(MAIN): $(OBJECTS) #simpleTest: simpleTest.c stringTools.c
+	$(CC) $^ -o $@ $(LDFLAGS)
+
+%.o: %.c $(DEPENDS)
+	$(CC) $< -o $@ -c $(CFLAGS)
+
+clear:
+	rm -rf $(MAIN) *.o
+
+zip:
+	zip $(MAIN).zip *
+
+.PHONY: clean zip
