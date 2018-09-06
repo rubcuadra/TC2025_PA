@@ -30,8 +30,6 @@ static void freeMFile(MFile *mf){
 }
 
 static void saveFile(const char * outputPath, MFile * mf){
-//    printf("Saving to File: %s\n", outputPath);
-    
     FILE *fp; // FILE  pointer
     fp = fopen(outputPath, "w+"); // open the file
     if (fp == NULL){ //Error opening the file
@@ -91,6 +89,7 @@ static void decipherLine(const char * input, char * output, int rails){
     }
     
     unsigned long size = strlen(input);
+    
     int jump = rails+(rails-2);
     int i = 0, f, s, iter;
     
@@ -110,7 +109,6 @@ static void decipherLine(const char * input, char * output, int rails){
                 output[ j ] = input[ i++ ];
                 j += iter++%2==0?f:s; //compare iter, then increase by f or s
             }while( j < size );
-            
         }
     }
 }
@@ -121,7 +119,7 @@ static void cipherLine(const char * input, char * output, int rails){
         return;
     }
     unsigned long size = strlen(input);
-    printf("%c\n",input[size-1]);
+    
     int i = 0,f,s,next,j;                 //index for output line
     int jump = rails+(rails-2);
     
@@ -151,12 +149,21 @@ static void cipherLine(const char * input, char * output, int rails){
     }
 }
 
+static void decipherFile(MFile * f, int num_rails){
+    unsigned long s;
+    for (int i = 0; i < f->numLines; i++) {
+        s = strlen( f->data[i] )+1;
+        char res[s]; res[s-1] = '\0';
+        strncpy(res, f->data[i], s);
+        decipherLine( res, f->data[i], num_rails);
+    }
+}
+
 static void cipherFile(MFile * f, int num_rails){
     unsigned long s;
-    
     for (int i = 0; i < f->numLines; i++) {
-        s = strlen( f->data[i] );
-        char res[s];
+        s = strlen( f->data[i] )+1;
+        char res[s]; res[s-1] = '\0';
         strncpy(res, f->data[i], s);
         cipherLine( res, f->data[i], num_rails);
     }
@@ -211,12 +218,12 @@ MFile * getFile(const char * filePath){
 }
 
 void testLines(){
-    int num_rails = 6;
-    char *deciphered = "I_REALLY_LIKE_PUZZLES!";
-    char *ciphered   = "IIS_LKE!R_ELEY_ZALPZLU";
+    int num_rails = 4;
+    char *deciphered = "This is a test of the system";
+    char *ciphered   = "Tsstshi et hyti at feses o m";
     unsigned long s = strlen(deciphered);
-    char res[s];
-    //strncpy(res, deciphered , s);
+    char res[s+1]; res[s] = '\0';
+    strncpy(res, deciphered , s);
     
     //Decipher
     decipherLine(ciphered, res, num_rails);

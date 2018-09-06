@@ -11,17 +11,17 @@
 
 int main(int argc, const char * argv[]) {
 
-    const char inputF[] = "/Users/rubcuadra/Desktop/example.txt";
+    const char inputF[] = "/Users/rubcuadra/Desktop/encoded_aladdin.txt";
     const char outputF[] = "/Users/rubcuadra/Desktop/exampleEncr.txt";
-    int num_rails = 4;
+    int num_rails = 5;
     MFile * cFile = getFile(inputF);
+
+    decipherFile(cFile, num_rails);
 //    cipherFile(cFile, num_rails);
-    printFile(cFile);
+
     saveFile(outputF,cFile);
 
     freeMFile(cFile);
 
-//    testLines();
-    
     return 0;
 }
