@@ -11,11 +11,14 @@
 
 int main(int argc, const char * argv[]) {
     // insert code here...
-    const char inputF[] = "/Users/rubcuadra/Desktop/example.txt";
-    const char outputF[] = "/Users/rubcuadra/Desktop/exampleEncr.txt";
-    int num_rails = 4;
-    MFile * cFile = getEncryptedFile(inputF, num_rails);
-    saveFile(outputF,cFile);
-    freeMFile(cFile);
+//    const char inputF[] = "/Users/rubcuadra/Desktop/example.txt";
+//    const char outputF[] = "/Users/rubcuadra/Desktop/exampleEncr.txt";
+//    int num_rails = 6;
+//    MFile * cFile = getEncryptedFile(inputF, num_rails);
+//    saveFile(outputF,cFile);
+//    freeMFile(cFile);
+    
+    testLines();
+    
     return 0;
 }

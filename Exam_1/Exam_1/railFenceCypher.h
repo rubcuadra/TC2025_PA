@@ -11,7 +11,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-typedef enum { false, true } bool;
+#include <assert.h>
+
 typedef struct{
     int numLines;
     char **data;
@@ -40,7 +41,76 @@ static void saveFile(const char * outputPath, MFile * mf){
     fclose(fp);
 }
 
-static void cypherLine(const char * input, char * output, int rails){
+/*
+ Rails: 6
+ input:  I_REALLY_LIKE_PUZZLES!
+ output: IIS_LKE!R_ELEY_ZALPZLU
+ 
+ both cipher and decipher go in that logic, filling outputs and leaving spaces until that rail is visited
+
+     0                                     10                                       20
+         1                               9       11                              19      21
+             2                       8               12                      18
+                 3               7                       13              17
+                     4       6                               14      16
+                         5                                       15
+
+ Decipher:
+ Iterate over array and reasigns order in output
+     inputString looks like: (numbers are indexes of the original messages, obtainable by extending the phrase in N rails)
+     0,10,20
+             1,9,11,19,21
+                         2,8,12,18
+                                  3-7-13-17
+                                           4,6,14,16
+                                                    5,15
+     output
+         first iter:
+             0,,,,,,,,,10,,,,,,,,,20,
+         second iter:
+             0,1,,,,,,,9,10,11,,,,,,,19,20,21
+ Cipher:
+    inputString looks like:
+        0,1,2,3,4,5,6,7,8,9...21
+ 
+    output
+        first iter
+            0,10,20,,,,,,,,,,,,,,,,,,,
+        second iter
+            0,10,20,1,9,11,19,21,,,,,,,,,,,,,,
+ */
+static void decipherLine(const char * input, char * output, int rails){
+    if (rails<3) {
+        printf("number of rails must be bigger than 2\n");
+        return;
+    }
+    
+    unsigned long size = strlen(input);
+    int jump = rails+(rails-2);
+    int i = 0, f, s, iter;
+    
+    for (int r = 0; r < rails && r < size; r++) {
+        int j = r;
+        
+        if (r == 0 || r == rails-1){ //First and last level same jump
+            do{
+                output[ j ] = input[i++];
+                j += jump;
+            }while(j < size);
+        }
+        else{
+            f = jump-r*2;  s = r*2;   //Jumps go f s f s f s
+            iter = 0;                 //To know which one to use
+            do{
+                output[ j ] = input[ i++ ];
+                j += iter++%2==0?f:s; //compare iter, then increase by f or s
+            }while( j < size );
+            
+        }
+    }
+}
+
+static void cipherLine(const char * input, char * output, int rails){
     if (rails<3) {
         printf("number of rails must be bigger than 2\n");
         return;
@@ -103,13 +173,29 @@ MFile * getEncryptedFile(const char * filePath, int rails){
             printf("Unable to allocate memory\n");
             exit(EXIT_FAILURE);
         }
-        cypherLine( line, f->data[c], rails);
+        cipherLine( line, f->data[c], rails);
         c++;
     }
     
     fclose(fp);
     if (line) free(line);
     return f;
+}
+
+void testLines(){
+    int num_rails = 6;
+    char *deciphered = "I_REALLY_LIKE_PUZZLES!";
+    char *ciphered   = "IIS_LKE!R_ELEY_ZALPZLU";
+    unsigned long s = strlen(deciphered);
+    char res[s];
+    //strncpy(res, deciphered , s);
+    
+    //Decipher
+    decipherLine(ciphered, res, num_rails);
+    assert( strcmp(deciphered, res)==0 );
+    //Cipher
+    cipherLine(  deciphered, res, num_rails);
+    assert( strcmp(ciphered, res)==0 );
 }
 
 #endif /* railFenceCypher_h */
