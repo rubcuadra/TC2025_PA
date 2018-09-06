@@ -97,9 +97,8 @@ MFile * getEncryptedFile(const char * filePath, int rails){
     
     while ((read = getline(&line, &len, fp)) != -1){
         if (line[read-1] == '\n') line[read-1] = '\0';        //Remove \n
-        f->data[c] = (char*) malloc( (read+1)*sizeof(char) ); //Allocate for encrypted
+        f->data[c] = (char*) malloc( (read)*sizeof(char) ); //Allocate for encrypted
         strncpy(f->data[c],line,read);                        //Copy the original message
-        f->data[c][read+1] = '\0';                            //Extra space for the \0
         if (!f->data[c]){
             printf("Unable to allocate memory\n");
             exit(EXIT_FAILURE);
