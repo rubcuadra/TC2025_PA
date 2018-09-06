@@ -18,6 +18,11 @@ typedef struct{
     char **data;
 } MFile;
 
+static void printFile(MFile *mf){
+    for (int i = 0; i < mf->numLines; i++)
+        printf("%s\n", mf->data[i]);
+}
+
 static void freeMFile(MFile *mf){
     for (int c = 0 ; c < mf->numLines ; ++c )
         free( mf->data[c] );
@@ -116,13 +121,17 @@ static void cipherLine(const char * input, char * output, int rails){
         return;
     }
     unsigned long size = strlen(input);
+    printf("%c\n",input[size-1]);
     int i = 0,f,s,next,j;                 //index for output line
     int jump = rails+(rails-2);
     
     for (int r = 0; r < rails ; r++) {
         if (r == 0 || r == rails-1){ //First and last level increment in jump
             for (int j = 0; r+j < size; j+=jump)
-                output[i++] = input[r+j];
+                {
+                    output[i++] = input[r+j];
+                    if (i >= size) return;
+                }
         }
         else{                         //Else they jump in f s f s f s
             f = jump-r*2;
@@ -134,13 +143,26 @@ static void cipherLine(const char * input, char * output, int rails){
                 output[i++] = input[r+j];
                 next = next==0?f:(next==f?s:f); //If it has not been set put f, else invert it between f and s
                 j += next;
+                
+                if (i >= size) return;
             }
             
         }
     }
 }
 
-MFile * getEncryptedFile(const char * filePath, int rails){
+static void cipherFile(MFile * f, int num_rails){
+    unsigned long s;
+    
+    for (int i = 0; i < f->numLines; i++) {
+        s = strlen( f->data[i] );
+        char res[s];
+        strncpy(res, f->data[i], s);
+        cipherLine( res, f->data[i], num_rails);
+    }
+}
+
+MFile * getFile(const char * filePath){
     FILE * fp;
     char * line = NULL;
     size_t len = 0;
@@ -166,14 +188,20 @@ MFile * getEncryptedFile(const char * filePath, int rails){
     c=0;
     
     while ((read = getline(&line, &len, fp)) != -1){
-        if (line[read-1] == '\n') line[read-1] = '\0';        //Remove \n
-        f->data[c] = (char*) malloc( (read)*sizeof(char) );   //Allocate for encrypted
+        
+        if (line[read-1] == '\n'){ //If break line, remove it and update size
+            line[read-1] = '\0';
+            read--;
+        }
+        
+        f->data[c] = (char*) malloc( (read+1)*sizeof(char) ); //Allocate for encrypted
         strncpy(f->data[c],line,read);                        //Copy the original message
+        f->data[c][read] = '\0';
+        
         if (!f->data[c]){
             printf("Unable to allocate memory\n");
             exit(EXIT_FAILURE);
         }
-        cipherLine( line, f->data[c], rails);
         c++;
     }
     
