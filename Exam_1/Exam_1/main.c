@@ -60,17 +60,12 @@ void createProcess()
         preparePipes(pipe_parent_child, pipe_child_parent, &fp_out, &fp_in); // Open the corresponding pipes
         userMenu(fp_out, fp_in); // Start the loop to hear user requests and send them to child
         closePipes(pipe_parent_child, pipe_child_parent, &fp_out, &fp_in); // Close the pipes
-        printf("Parent finishing\n");
     }
     else if (pid == 0) // Child process
     {
-        
         preparePipes(pipe_child_parent, pipe_parent_child, &fp_out, &fp_in); // Open the corresponding pipes
-        
         attendRequests(fp_out, fp_in); // Start the loop to hear user requests and get the factorial
-        
         closePipes(pipe_child_parent, pipe_parent_child, &fp_out, &fp_in); // Close the pipes
-        printf("Child finishing\n");
     }
     else // No process created
     {
@@ -114,7 +109,7 @@ void userMenu(FILE * fp_out, FILE * fp_in)
                 fflush(fp_out); //do we need it?
                 
                 fscanf(fp_in, "%120s", outFilePath);
-                printf("CHILDREN SENT: %120s\n",outFilePath);
+                printf("CREATED: %120s\n",outFilePath);
                 step = '/'; //Go to clean
                 break;
             case 'e':
