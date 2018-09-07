@@ -14,9 +14,6 @@
 
 #define FILEP_PATH_SIZE 100
 #define BUFFER_SIZE 20
-#define PROC_EXIT 63
-#define PROC_SUCC 66
-#define PROC_FAIL 67
 #define WAIT_SIG 0
 #define START_SIG -1
 #define FINISH_SIG -2
@@ -24,13 +21,12 @@
 #define DECRYPT_FLAG 318
 
 ///// FUNCTION DECLARATIONS /////
-void createProcess();
+void createProcess(void);
 void userMenu(FILE * fp_out, FILE * fp_in);
 void attendRequests(FILE * fp_out, FILE * fp_in);
 void openPipe(int pipe_channel[]);
 void preparePipes(int pipe_out[], int pipe_in[], FILE ** fp_out, FILE ** fp_in);
 void closePipes(int pipe_out[], int pipe_in[], FILE ** fp_out, FILE ** fp_in);
-unsigned long int factorial(int number);
 
 int main(int argc, const char * argv[])
 {
@@ -93,7 +89,6 @@ void userMenu(FILE * fp_out, FILE * fp_in)
     char inputFilePath[FILEP_PATH_SIZE];
     char outFilePath[FILEP_PATH_SIZE+20];
     char step = '_';
-    int proc_result = 0;
     
     while(step!='q'){
         
@@ -177,16 +172,16 @@ void attendRequests(FILE * fp_out, FILE * fp_in)
             for (int i = s; i > 0 ; i--) { if (inputFilePath[i] == '/'){ lastDivI = i; break; } } //Find last /
             
             //Create outputfile path string
-            int missingToCopy = lastDivI!=-1?s-lastDivI:0;                                        //It is 0 if there are no / in the path
             char outputFilePath[s+10]; //for extra + "\0"
             strncpy(outputFilePath, inputFilePath, s);
             const char * extra = action==ENCRYPT_FLAG?"encoded_":"decoded_";
-            int ix = 0, ox=0;
+            int ix = 0, ox=0; //Concat logic
             for (int i = lastDivI+1; i < s+10; i++) {
                 if (ix < 8) outputFilePath[i] = extra[ix++];
                 else outputFilePath[i] = inputFilePath[lastDivI+1+ox++];
             }
             
+            //GetFile and cipher or decipher 
             MFile * cFile = getFile(inputFilePath);
             if (action == ENCRYPT_FLAG) {
                 cipherFile(cFile, rails);

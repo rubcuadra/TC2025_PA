@@ -18,10 +18,10 @@ typedef struct{
     char **data;
 } MFile;
 
-static void printFile(MFile *mf){
-    for (int i = 0; i < mf->numLines; i++)
-        printf("%s\n", mf->data[i]);
-}
+//static void printFile(MFile *mf){
+//    for (int i = 0; i < mf->numLines; i++)
+//        printf("%s\n", mf->data[i]);
+//}
 
 static void freeMFile(MFile *mf){
     for (int c = 0 ; c < mf->numLines ; ++c )
