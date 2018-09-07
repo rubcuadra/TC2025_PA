@@ -12,6 +12,17 @@
 #include <sys/wait.h>
 #include "railFenceCypher.h"
 
+#define FILEP_PATH_SIZE 100
+#define BUFFER_SIZE 20
+#define PROC_EXIT 63
+#define PROC_SUCC 66
+#define PROC_FAIL 67
+#define WAIT_SIG 0
+#define START_SIG -1
+#define FINISH_SIG -2
+#define ENCRYPT_FLAG 316
+#define DECRYPT_FLAG 318
+
 ///// FUNCTION DECLARATIONS /////
 void createProcess();
 void userMenu(FILE * fp_out, FILE * fp_in);
@@ -23,17 +34,7 @@ unsigned long int factorial(int number);
 
 int main(int argc, const char * argv[])
 {
-//    const char inputF[] = "/Users/rubcuadra/Desktop/encoded_aladdin.txt";
-//    const char outputF[] = "/Users/rubcuadra/Desktop/exampleEncr.txt";
-//    int num_rails = 5;
-//    MFile * cFile = getFile(inputF);
-//    decipherFile(cFile, num_rails);
-//    cipherFile(cFile, num_rails);
-//    saveFile(outputF,cFile);
-//    freeMFile(cFile);
-    
     createProcess();
-    
     return 0;
 }
 
@@ -86,24 +87,64 @@ void createProcess()
 // Receive: the file pointers to write and read to the child
 void userMenu(FILE * fp_out, FILE * fp_in)
 {
-    int number = 0;
-    unsigned long int result = 0;
+    int action = ENCRYPT_FLAG;
+    int rails = 3;
+    char buffer[BUFFER_SIZE];
+    char inputFilePath[FILEP_PATH_SIZE];
+    char outFilePath[FILEP_PATH_SIZE+20];
+    char step = '_';
+    int proc_result = 0;
     
-    while (number >= 0)
-    {
-        printf("\nEnter a number to compute its factorial (enter a negative number to finish): ");
-        scanf("%d", &number);
-        // Send the number to the child, and a new line
-        fprintf(fp_out, "%d\n", number);
-        // Write immediately to the stream
-        fflush(fp_out);
+    while(step!='q'){
         
-        // Compute factorials for positive numbers and 0 only
-        if (number >= 0)
-        {
-            // Get the reply from the child
-            fscanf(fp_in, "%lu", &result);
-            printf("The result sent by child is %lu\n", result);
+        switch (step) {
+            case '_':
+                printf("Welcome! Press the button:\n\t'e' - Encrypt file\n\t'd' - Decrypt file\n\t'q' - Exit\nYour choice: ");
+                scanf("%s", buffer);
+                step = buffer[0];
+                break;
+            case ')':
+                printf("Introduce the path to the input file\n");
+                scanf("%100s", inputFilePath);
+                printf("Introduce number of rails\n");
+                scanf("%d", &rails);
+                //Validate that inputs are okay?
+                step = '$';   //Run it
+                break;
+            case '$':
+                fprintf(fp_out, "%d\n",START_SIG); //send an start signal
+                fprintf(fp_out, "%d\n",action); //ENCR or DECR
+                fprintf(fp_out, "%100s\n",inputFilePath); //send inputFilePath
+                fprintf(fp_out, "%d\n",rails); //send num rails
+                fflush(fp_out); //do we need it?
+                
+                fscanf(fp_in, "%120s", outFilePath);
+                printf("CHILDREN SENT: %120s\n",outFilePath);
+                step = '/'; //Go to clean
+                break;
+            case 'e':
+                action = ENCRYPT_FLAG;
+                step   = ')'; //Ask for file
+                break;
+            case 'd':
+                action = DECRYPT_FLAG;
+                step   = ')'; //Ask for file
+                break;
+            case 'q':
+//                fprintf(fp_out, "%d\n",FINISH_SIG); //send an exit signal
+                fflush(fp_out);
+                break;
+            case '/':
+                memset(inputFilePath, 0, FILEP_PATH_SIZE);
+                memset(outFilePath, 0, FILEP_PATH_SIZE+20);
+                memset(buffer, 0, BUFFER_SIZE);
+                action = ENCRYPT_FLAG;
+                step = '_'; //Clean and return to start
+                break;
+            default: //Error, reset everything and try again
+                printf("Unkown command, try again! :)\n");
+                step = '/'; //Clean everything
+                break;
         }
     }
 }
@@ -112,23 +153,55 @@ void userMenu(FILE * fp_out, FILE * fp_in)
 // Receive: the file pointers to write and read to the parent
 void attendRequests(FILE * fp_out, FILE * fp_in)
 {
-    int number = 0;
-    unsigned long int result = 0;
+    int signal = WAIT_SIG;
+    int rails = 3;
+    char inputFilePath[FILEP_PATH_SIZE];
+    int action = ENCRYPT_FLAG;
     
     while (1)
     {
         // Listen for requests from the parent
-        fscanf(fp_in, "%d", &number);
-        // Finish with a negative number
-        if (number < 0)
-        {
+        fscanf(fp_in, "%d",&signal); //Know when to start
+        if (signal == FINISH_SIG) {
+            printf("PROC OUT\n");
             break;
         }
-        result = factorial(number);
-        // Send the result back to the parent, with a new line
-        fprintf(fp_out, "%lu\n", result);
-        // Write immediately to the stream
-        fflush(fp_out);
+        else if (signal == START_SIG){
+            fscanf(fp_in, "%d",&action);    //Obtain ENCR or DECR
+            fscanf(fp_in, "%100s",inputFilePath); //send inputFilePath
+            fscanf(fp_in, "%d",&rails); //send num rails
+            
+            
+            int s = (int) strlen( inputFilePath );
+            int lastDivI = -1;
+            for (int i = s; i > 0 ; i--) { if (inputFilePath[i] == '/'){ lastDivI = i; break; } } //Find last /
+            
+            //Create outputfile path string
+            int missingToCopy = lastDivI!=-1?s-lastDivI:0;                                        //It is 0 if there are no / in the path
+            char outputFilePath[s+10]; //for extra + "\0"
+            strncpy(outputFilePath, inputFilePath, s);
+            const char * extra = action==ENCRYPT_FLAG?"encoded_":"decoded_";
+            int ix = 0, ox=0;
+            for (int i = lastDivI+1; i < s+10; i++) {
+                if (ix < 8) outputFilePath[i] = extra[ix++];
+                else outputFilePath[i] = inputFilePath[lastDivI+1+ox++];
+            }
+            
+            MFile * cFile = getFile(inputFilePath);
+            if (action == ENCRYPT_FLAG) {
+                cipherFile(cFile, rails);
+            }else{
+                decipherFile(cFile, rails);
+            }
+            saveFile(outputFilePath,cFile);
+            freeMFile(cFile);
+            
+            fprintf(fp_out, "%s\n", outputFilePath);
+            fflush(fp_out);
+        }
+        else{
+            fflush(fp_out);
+        }
     }
 }
 
@@ -175,15 +248,4 @@ void closePipes(int pipe_out[], int pipe_in[], FILE ** fp_out, FILE ** fp_in)
     // Close the file descriptors
     close(pipe_in[0]);
     close(pipe_out[1]);
-}
-
-// Compute the factorial of a number
-unsigned long int factorial(int number)
-{
-    unsigned long int result = 1;
-    for (; number > 0; number--)
-    {
-        result *= number;
-    }
-    return result;
 }
