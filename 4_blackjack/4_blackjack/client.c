@@ -50,7 +50,7 @@ int main(int argc, char * argv[])
 }
 
 void INThandler(int sig){
-
+    printf("Ctrl C\n");
 }
 
 ///// FUNCTION DEFINITIONS
@@ -124,7 +124,7 @@ void gameStart(int connection_fd)
     
     srand(time(0)); //Use the current time as seed generator
 
-    printf("Place your bet:\n"); //We ask the player for the bet they'd like to do
+    printf("Place your bet (Number between 1 and 100):\n"); //We ask the player for the bet they'd like to do
     betPrice = readIntInRange(1,100);
     printf("%d\n",betPrice);
     // SEND to server the bet
@@ -179,7 +179,7 @@ int readIntInRange(int x,int y){
     int res = x-1;
     int answer, c;
     do{
-        printf("Write a number between %d and %d\n",x,y);
+        printf("> ");
         answer = scanf("%d", &res);
         while((c = getchar()) != '\n' && c != EOF); //Flush4567
     }
