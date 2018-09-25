@@ -156,16 +156,29 @@ void gameStart(int connection_fd)
     Hand * myHand = newHand(2, cds);
     printHand(myHand,0);
     
+    int newCard;
     do{
         showOptions();
-        playerChoice = readIntInRange(1,2);    
-        //Send HIT to the server
-        //Wait NEW_CARD
+        playerChoice = readIntInRange(1,2);  
+        //Send OPTION to the server
+        sprintf(buffer, "%d\n", playerChoice);
+        if (send(connection_fd, buffer, strlen(buffer) + 1, 0) == -1 )fatalError("send");
+        bzero(&buffer, BUFFER_SIZE);  
+        if (playerChoice == 1)
+        {
+            //Wait NEW_CARD
+            chars_read = recv(connection_fd, buffer, BUFFER_SIZE, 0);
+            if (chars_read == -1) fatalError("recv");
+            sscanf(buffer, "%d", newCard);
+            bzero(&buffer, BUFFER_SIZE);
+            //Ya tenemos NewCard, agregar a la mano y print
+            appendCard(myHand, newCard);
+            printHand(myHand); 
+        }
     } while( playerChoice == 1 ); //Player hit
-
-    //Send STAND
-    //Wait answer of WINNER
-    //SHOW
+    
+    //Wait Dealer to send his hand
+    //print WINNER
 }
 
 void fatalError(const char * message)

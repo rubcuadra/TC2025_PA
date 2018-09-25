@@ -279,15 +279,33 @@ void attendBetPrice(int client_fd) {
     }while(clientMove == 1);
     
     if (clientMove == 0){ //STAND
-        if (peekScore(clientHand)) {
-            //client already lost just stand
-        }
+        if (peekScore(clientHand)) ; //client already lost just stand
         else{
-            //We TAKE CARDS
+            int threshold = 5; //Que tanto nos la jugamos
+            int finish = 0;
+            
+            //DEALER LOGIC to Take cards
+            while (finish == 0)
+            {
+                if(serverHand->scoreX == 21 || serverHand->score == 21){ finish=1; } //Stand, we have a 21
+                else if(serverHand->scoreX > 21 && serverHand->score > 21) {finish=1;}
+                else if(serverHand->scoreX > 21) {
+                    if ( (21 - serverHand->score) > threshold) {
+                        hitHand(serverHand); //HIT
+                    }
+                    else{ finish = 1; }      //STAY
+                }
+                else{
+                    if ( (21-serverHand->scoreX) > threshold) {
+                        hitHand(serverHand);
+                    }
+                    else{ finish=1;}
+                }
+            }
         }
     }
-    //Once We finish taking, send winner
-    
+    //SEND DEALER HAND
+    //PRINT WINNER
 }
 
 void fatalError(const char * message)

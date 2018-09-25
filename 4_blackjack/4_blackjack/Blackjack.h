@@ -192,6 +192,22 @@ void hitHand(Hand * h){
     if(h->scoreX == h->score && v==1) h->scoreX+=10; //Ace as 11
 }
 
+void appendCard(Hand * h, int card){
+    int * newha = (int*) malloc( (h->size+1)*sizeof(int) );
+    //Copy and append card
+    for (int i = 0; i < h->size; i++) newha[i] = h->cards[i];
+    newha[h->size] = card;
+    //Set new Hand
+    free(h->cards);
+    h->cards = newha;
+    h->size += 1;
+    //Update Score
+    int v = getCardValue( h->cards[h->size-1] );
+    h->score += v;
+    h->scoreX += v;
+    if(h->scoreX == h->score && v==1) h->scoreX+=10; //Ace as 11
+}
+
 /*
  Winner comparison
  1  h1>h2 h1 Wins
