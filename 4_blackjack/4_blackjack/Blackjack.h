@@ -137,16 +137,38 @@ Hand * getRandomHand( int handSize ){
     return r;
 }
 
-void printHand(Hand * h){
+//hidden = Num of hidden cards
+void printHand(Hand * h, int hidden){
     char cv[3], cf[2];
-    for (int i=0; i<h->size; i++) printf("%d ",h->cards[i]); printf("\n");
+    int tempHidden = hidden;
     for (int i = 0; i < h->size; i++) printf("_________ "); printf("\n");
-    for (int i = 0; i < h->size; i++) { setCardName(h->cards[i], cv, cf); printf(cv[0]=='1'&&cv[1]=='0'?"|%s%s    | ":"|%s%s     | ",cv,cf); } printf("\n");
+    for (int i = 0; i < h->size; i++) {
+        setCardName(h->cards[i], cv, cf);
+        if(hidden>0)
+        {
+            printf("|       | ");
+            hidden -= 1;
+        }
+        else{
+            printf(cv[0]=='1'&&cv[1]=='0'?"|%s%s    | ":"|%s%s     | ",cv,cf);
+        }
+    } printf("\n"); hidden = tempHidden;
     for (int i = 0; i < h->size; i++) printf("|       | "); printf("\n");
     for (int i = 0; i < h->size; i++) printf("|       | "); printf("\n");
     for (int i = 0; i < h->size; i++) printf("|       | "); printf("\n");
-    for (int i = 0; i < h->size; i++) { setCardName(h->cards[i], cv, cf); printf(cv[0]=='1'&&cv[1]=='0'?"|    %s%s| ":"|     %s%s| ",cv,cf);} printf("\n");
+    for (int i = 0; i < h->size; i++) {
+        setCardName(h->cards[i], cv, cf);
+        if(hidden>0)
+        {
+            printf("|       | ");
+            hidden -= 1;
+        }
+        else{
+            printf(cv[0]=='1'&&cv[1]=='0'?"|    %s%s| ":"|     %s%s| ",cv,cf);
+        }
+    } printf("\n"); hidden = tempHidden;
     for (int i = 0; i < h->size; i++) printf("|_______| "); printf("\n");
+    printf("\n");
 }
 
 void hitHand(Hand * h){

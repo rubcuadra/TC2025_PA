@@ -255,43 +255,49 @@ void StartGame(int client_fd)
     
     Hand * clientHand = getRandomHand(2);
     Hand * serverHand = getRandomHand(2);
-    
-    // RECV
-    // Read the request from the client
-    chars_read = recv(client_fd, buffer, BUFFER_SIZE, 0);
-    if (chars_read == 0)
-    {
-        printf("Client disconnected\n");
-        return;
-    }
-    if (chars_read == -1)
-    {
-        printf("Client receive error\n");
-        return;
-    }
-    
-    startDeck(dealerDeckSize, dealerDeck);
-    // printCards(dealerDeckSize, dealerDeck);
-    dealerScore = totalScore(dealerDeckSize, dealerDeck);
-    while ( dealerScore <= 16 ) {
-        hitCard(dealerDeckSize, dealerDeck);
-        dealerDeckSize += 1;
-        dealerScore = totalScore(dealerDeckSize, dealerDeck);
-    }
-    
-    printf("\nDealer's Cards are:\n");
-    printCards(dealerDeckSize, dealerDeck);
-    
-    // Get the numerical value for iterations
-    sscanf(buffer, "%d", &playerScore);
-    
-    printf(" > Got the player's score as: %d\n", playerScore);
-    
-    
-    sprintf(buffer, "%d\n", dealerScore);
+
+    //Send the cards
+    sprintf(buffer, "%d %d,%d %d\n", serverHand->cards[0],serverHand->cards[1],clientHand->cards[0],clientHand->cards[1]);
     if (send(client_fd, buffer, strlen(buffer) + 1, 0) == -1) {
         printf("Could not send reply");
     }
+    
+    //    // RECV
+//    // Read the request from the client
+//    chars_read = recv(client_fd, buffer, BUFFER_SIZE, 0);
+//    if (chars_read == 0)
+//    {
+//        printf("Client disconnected\n");
+//        return;
+//    }
+//    if (chars_read == -1)
+//    {
+//        printf("Client receive error\n");
+//        return;
+//    }
+//
+//    startDeck(dealerDeckSize, dealerDeck);
+//    // printCards(dealerDeckSize, dealerDeck);
+//    dealerScore = totalScore(dealerDeckSize, dealerDeck);
+//    while ( dealerScore <= 16 ) {
+//        hitCard(dealerDeckSize, dealerDeck);
+//        dealerDeckSize += 1;
+//        dealerScore = totalScore(dealerDeckSize, dealerDeck);
+//    }
+//
+//    printf("\nDealer's Cards are:\n");
+//    printCards(dealerDeckSize, dealerDeck);
+//
+//    // Get the numerical value for iterations
+//    sscanf(buffer, "%d", &playerScore);
+//
+//    printf(" > Got the player's score as: %d\n", playerScore);
+//
+//
+//    sprintf(buffer, "%d\n", dealerScore);
+//    if (send(client_fd, buffer, strlen(buffer) + 1, 0) == -1) {
+//        printf("Could not send reply");
+//    }
 }
 
 void printCards(int deckSize, int deck[deckSize]) {

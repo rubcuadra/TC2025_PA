@@ -15,9 +15,8 @@
 // Sockets libraries
 #include <netdb.h>
 #include <arpa/inet.h>
-
 #include <ifaddrs.h>
-
+#include "Blackjack.h"
 #define BUFFER_SIZE 1024
 
 ///// FUNCTION DECLARATIONS
@@ -117,6 +116,7 @@ void gameStart(int connection_fd)
     int betPrice; //Bettings from the player
     int totalBetPrice;
     int startGameFlag;
+    int f,s,f2,s2;
     int playerChoice;
     int playerScore; //Player Score
     int dealerScore; //Dealer's score
@@ -138,141 +138,34 @@ void gameStart(int connection_fd)
     sscanf(buffer, "%d", &startGameFlag);
     if (startGameFlag == 1) {printf("GAME STARTED\n");}
     else { fatalError("Server error"); }
-    
+    bzero(&buffer, BUFFER_SIZE);
+
     // Step 3: Wait for your cards
     chars_read = recv(connection_fd, buffer, BUFFER_SIZE, 0);
     if (chars_read == -1) fatalError("recv");
-    sscanf(buffer, "%d", &startGameFlag);
-    if (startGameFlag == 1) {printf("Start Game\n");}
-
-    int cds[2] = {f,s};
-    Hand * myHand = newHand(2, cds);
-    printHand(myHand);
-    
-    // int w = compareHands(dealerHand, clientHand);
-    // printf( "Winner is %s\n", w==1?"Dealer":(w==0?"Nobody":"Player") );
-    // return 0;
-
-
-    startDeck(playerDeckSize, playerDeck); //Show the player's hand to the player himself
-    printCards(playerDeckSize, playerDeck);
-
-    showOptions();
-    scanf("%d", &playerChoice); //Give our player the choice to hit or stnad
-    while(playerChoice < 1 && playerChoice > 2) {
-        printf("Please re-enter your choice, it has to be Hit or Stand");
-        scanf("%d", &playerChoice);
-        printf("\n");
-    }
-
-    while(playerChoice == 1) { //If our player decides to hit a card
-        hitCard(playerDeckSize, playerDeck);
-        playerDeckSize += 1;
-        printf("Your current cards are:\n");
-        printCards(playerDeckSize, playerDeck);
-        if (checkLose(playerDeckSize, playerDeck) == 1) { //We check to see if the player score has gone over 21
-            printf("You have lost the game for going over 21, the dealer has gotten all your money\n");
-            exit(0);
-        } else {
-            showOptions();
-            scanf("%d", &playerChoice); //Give our player the choice to hit or stnad
-            while(playerChoice < 1 && playerChoice > 2) {
-                printf("Please re-enter your choice, it has to be Hit or Stand");
-                scanf("%d", &playerChoice);
-                printf("\n");
-            }
-        }
-    }
-
-    if((playerDeck[0] == 1 && playerDeck[1] == 10) || (playerDeck[0] == 10 && playerDeck[1] == 1)) {
-        playerScore = 21;
-        blackjack = 1;
-    } // In case of a blackjack
-    else {
-        playerScore = getDeckValue(playerDeckSize, playerDeck);
-    }
-    
-    // Prepare the response to the server
-    sprintf(buffer, "%d\n", playerScore);
-
-    // SEND
-    // Send the response
-    if (send(connection_fd, buffer, strlen(buffer) + 1, 0) == -1) {
-        fatalError("send");
-    }
-
-    // Clear the buffer
+    sscanf(buffer, "%d %d,%d %d", &f, &s, &f2, &s2);
     bzero(&buffer, BUFFER_SIZE);
 
-    // RECV
-    // Receive the request
-    chars_read = recv(connection_fd, buffer, BUFFER_SIZE, 0);
-    if (chars_read == -1) {
-        fatalError("recv");
-    }
+    printf("DEALER:\n");
+    int cds2[2] = {f2,s2};
+    Hand * serverHand = newHand(2, cds2);
+    printHand(serverHand,1);
 
-    sscanf(buffer, "%d", &dealerScore);
+    printf("YOU:\n");
+    int cds[2] = {f,s};
+    Hand * myHand = newHand(2, cds);
+    printHand(myHand,0);
+    
+    do{
+        showOptions();
+        playerChoice = readIntInRange(1,2);    
+        //Send HIT to the server
+        //Wait NEW_CARD
+    } while( playerChoice == 1 ); //Player hit
 
-    // Print the result
-    if ( dealerScore > 21) {
-        if( playerScore == 21 && blackjack == 1) {
-            printf("\nYou have won through blackjack\n\nDealer's score: %d\nPlayer's score: %d\n\n", dealerScore, playerScore);
-            printf("Total winnings: %f", betPrice * 2.5);
-            printf("$\n");
-        } else {
-            printf("\nThe dealer has lost since his score is over 21\n\nDealer's score: %d\nPlayer's score: %d\n\n", dealerScore, playerScore);
-        }  
-    } else {
-        if (dealerScore > playerScore) {
-            printf("\nThe dealer has won all the money since his score is higher than yours\n\nDealer's score: %d\nPlayer's score: %d\n\n", dealerScore, playerScore);
-            printf("Total winnings: -%d", betPrice);
-            printf("$\n");
-        }
-        else if (dealerScore == playerScore) {
-            printf("\nThe dealer and you have the same score, so your bet is returned\n\nDealer's score: %d\nPlayer's score: %d\n\n", dealerScore, playerScore);
-            printf("No winnings nor losses\n");
-        }
-        else if (playerScore > dealerScore) {
-            printf("\nYou have won due to a higher score, you get your winnings and double of that\n\nDealer's score: %d\nPlayer's score: %d\n\n", dealerScore, playerScore);
-            printf("Total winnings: %d", betPrice * 2);
-            printf("$\n");
-        }
-    }
-}
-
-void printCards(int deckSize, int deck[deckSize]) {
-    for (int i = 0; i < deckSize; i++) { //Iterate through the deckSize to initialize the deck
-        printf("%d\t", deck[i]);
-    }
-    printf("\n\n");
-}
-
-void startDeck(int deckSize, int deck[deckSize]) {
-    for (int i = 0; i < deckSize; i++) { //Iterate through the deckSize to initialize the deck
-        deck[i] = (rand() % 10 + 1); //Give cards between 1 and 11
-    }
-}
-
-void hitCard(int deckSize, int deck[deckSize]) {
-    deck[deckSize] = (rand() % 10 + 1); //add a new card to our deck
-    deckSize = deckSize + 1;
-}
-
-int checkLose(int deckSize, int deck[deckSize]) {
-    int total = 0; //Have a variable to store the total amount of score
-    for (int i = 0; i < deckSize; i++) { 
-        total += deck[i];
-    }
-    if (total > 21)  //Check if it's an automatic loss
-        return 1;
-    else
-        return 0;
-}
-
-int getDeckValue(int deckSize, int deck[deckSize]) { 
-    int total = 0;
-    for (int i = 0; i < deckSize; i++) total += deck[i];
-    return total;
+    //Send STAND
+    //Wait answer of WINNER
+    //SHOW
 }
 
 void fatalError(const char * message)
@@ -281,6 +174,7 @@ void fatalError(const char * message)
     exit(EXIT_FAILURE);
 }
 
+//it includes x and y = [x,y]
 int readIntInRange(int x,int y){
     int res = x-1;
     int answer, c;
