@@ -170,9 +170,10 @@ void waitForConnections(int server_fd)
     {
         // ACCEPT
         // Wait for a client connection
+        printf("Waiting connections\n");
         client_fd = accept(server_fd, (struct sockaddr *) &client_address, &client_address_size);
         if (client_fd == -1) {
-            fatalError("jhgvjhgvhj");
+            fatalError("Accept ERROR");
         }
         
         // Create a child to deal with the new client
@@ -283,7 +284,6 @@ void play(int client_fd) {
         int finish = 0;
         while (finish == 0)
         {
-            printf("FIN %d\n",serverHand->score);
             if(serverHand->scoreX == 21 || serverHand->score == 21){ finish=1; }  //Stand, we have a 21
             else if(serverHand->scoreX > 21 && serverHand->score > 21) {finish=1;}//We lost already
             else if(serverHand->scoreX > 21) {
@@ -312,9 +312,8 @@ void play(int client_fd) {
     if (send(client_fd, buffer, strlen(buffer) + 1, 0) == -1) printf("Could not send reply");
     bzero(&buffer, BUFFER_SIZE);
     //PRINT WINNER
-    printHand(serverHand, 0);
     int winner = compareHands(clientHand, serverHand);
-    printf("%d",winner);
+    printf("%d\n",winner);
 }
 
 void fatalError(const char * message)

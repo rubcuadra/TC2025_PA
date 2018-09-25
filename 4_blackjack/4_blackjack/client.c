@@ -24,11 +24,6 @@ int readIntInRange(int x,int y);
 void usage(char * program);
 int openSocket(char * address, char * port);
 void gameStart(int connection_fd);
-void startDeck(int deckSize, int deck[deckSize]);
-void printCards(int deckSize, int deck[deckSize]);
-void hitCard(int deckSize, int deck[deckSize]);
-int checkLose(int deckSize, int deck[deckSize]);
-int getDeckValue(int deckSize, int deck[deckSize]);
 void fatalError(const char * message);
 void showOptions();
 void INThandler();
@@ -111,10 +106,7 @@ void gameStart(int connection_fd)
 {
     char buffer[BUFFER_SIZE];
     int chars_read;
-    int playerDeckSize = 2;
-    int playerDeck[playerDeckSize]; //Define our variables (decks for 2 players and their scores)
     int betPrice; //Bettings from the player
-    int totalBetPrice;
     int startGameFlag;
     int f,s,f2,s2;
     int playerChoice;
