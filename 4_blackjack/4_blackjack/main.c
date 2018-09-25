@@ -214,7 +214,6 @@ void play(int client_fd) {
     char buffer[BUFFER_SIZE];
     int chars_read;
     int totalBetPrice;
-    int dealerDeckSize = 2;
     int clientMove;
     
     bzero(&buffer, BUFFER_SIZE);
