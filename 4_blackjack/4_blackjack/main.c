@@ -300,7 +300,7 @@ void play(int client_fd) {
         }
     }
 
-    //SEND DEALER HAND
+    //SEND UPDATED DEALER HAND
     for (int i = 2; i < serverHand->size; i++) {
         sprintf(buffer, "%d\n", serverHand->cards[i] );
         if (send(client_fd, buffer, strlen(buffer) + 1, 0) == -1) printf("Could not send reply");
