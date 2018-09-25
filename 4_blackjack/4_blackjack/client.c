@@ -136,10 +136,23 @@ void gameStart(int connection_fd)
     chars_read = recv(connection_fd, buffer, BUFFER_SIZE, 0);
     if (chars_read == -1) fatalError("recv");
     sscanf(buffer, "%d", &startGameFlag);
+    if (startGameFlag == 1) {printf("GAME STARTED\n");}
+    else { fatalError("Server error"); }
+    
+    // Step 3: Wait for your cards
+    chars_read = recv(connection_fd, buffer, BUFFER_SIZE, 0);
+    if (chars_read == -1) fatalError("recv");
+    sscanf(buffer, "%d", &startGameFlag);
     if (startGameFlag == 1) {printf("Start Game\n");}
 
-    //Start the actual game--------------------------
-    printf("\nYour current cards are:\n"); //Initialize our player's cards
+    int cds[2] = {f,s};
+    Hand * myHand = newHand(2, cds);
+    printHand(myHand);
+    
+    // int w = compareHands(dealerHand, clientHand);
+    // printf( "Winner is %s\n", w==1?"Dealer":(w==0?"Nobody":"Player") );
+    // return 0;
+
 
     startDeck(playerDeckSize, playerDeck); //Show the player's hand to the player himself
     printCards(playerDeckSize, playerDeck);

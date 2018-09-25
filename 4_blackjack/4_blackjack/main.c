@@ -37,9 +37,6 @@ void attendBetPrice(int client_fd);
 int main(int argc, char * argv[])
 {
     srand(time(0)); //Seed
-    Hand * dealerHand = getRandomHand(2);
-    printHand(dealerHand);
-    return 0;
     int server_fd;
     
     printf("\n=== Blackjack Server ===\n");
@@ -233,10 +230,10 @@ void attendBetPrice(int client_fd) {
     }
     
     sscanf(buffer, "%d", &totalBetPrice); //Client must send a number
-    printf(" > Client put a bet of:%d\n", totalBetPrice);
+    printf(" - Client bets:%d\n", totalBetPrice);
     bzero(&buffer, BUFFER_SIZE);
     // Recieved the bet
-    
+    //Case more players? it does not matters, only that one or the dealer wins and we are not counting cards
     // START the game
     int answer = 1;
     sprintf(buffer, "%d\n", answer);
@@ -256,6 +253,8 @@ void StartGame(int client_fd)
     int dealerScore;
     int playerScore;
     
+    Hand * clientHand = getRandomHand(2);
+    Hand * serverHand = getRandomHand(2);
     
     // RECV
     // Read the request from the client
