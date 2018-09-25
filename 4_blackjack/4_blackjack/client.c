@@ -35,17 +35,12 @@ int main(int argc, char * argv[])
 
     printf("\n=== Blackjack Client ===\n");
     if (argc != 3) usage(argv[0]); // Check the correct arguments
-    // signal(SIGINT, INThandler);
     //START
     connection_fd = openSocket(argv[1], argv[2]);
     gameStart(connection_fd);
     close(connection_fd);
 
     return 0;
-}
-
-void INThandler(int sig){
-    printf("Ctrl C\n");
 }
 
 ///// FUNCTION DEFINITIONS
@@ -146,8 +141,14 @@ void gameStart(int connection_fd)
     printHand(myHand,0);
     
     do{
-        showOptions();
-        playerChoice = readIntInRange(1,2);  
+        if (myHand->score<=21) //Allow him to choose
+        {
+            showOptions();
+            playerChoice = readIntInRange(1,2);      
+        }
+        else
+            playerChoice = 2; //Stay
+        
         sprintf(buffer, "%d\n", playerChoice);
         if (send(connection_fd, buffer, strlen(buffer) + 1, 0) == -1 )fatalError("send");
         bzero(&buffer, BUFFER_SIZE);  
@@ -160,6 +161,7 @@ void gameStart(int connection_fd)
             bzero(&buffer, BUFFER_SIZE);
             //Ya tenemos NewCard, agregar a la mano y print
             appendCard(myHand, newCard);
+            printf("YOU:\n");
             printHand(myHand,0); 
         }
     } while( playerChoice == 1 ); //Player hit
