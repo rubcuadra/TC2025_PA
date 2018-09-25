@@ -102,7 +102,7 @@ void setCardName(int c,char * st,char *fm){
         int m = c%10;
         //Card Name
         if (m == 1)      strncpy(st, "A", 3);
-        sprintf(st,"%d", m==0?10:c%10);
+        else             sprintf(st,"%d", m==0?10:c%10);
     }
 }
 Hand * newHand(int s, int * cards){
@@ -198,7 +198,7 @@ void appendCard(Hand * h, int card){
     for (int i = 0; i < h->size; i++) newha[i] = h->cards[i];
     newha[h->size] = card;
     //Set new Hand
-    free(h->cards);
+    // free(h->cards); //TODO Por??
     h->cards = newha;
     h->size += 1;
     //Update Score

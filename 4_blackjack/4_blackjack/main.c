@@ -31,7 +31,7 @@ void printCards(int deckSize, int deck[deckSize]);
 void hitCard(int deckSize, int deck[deckSize]);
 int checkLose(int deckSize, int deck[deckSize]);
 int totalScore(int deckSize, int deck[deckSize]);
-void attendBetPrice(int client_fd);
+void play(int client_fd);
 
 ///// MAIN FUNCTION
 int main(int argc, char * argv[])
@@ -171,27 +171,27 @@ void waitForConnections(int server_fd)
         // ACCEPT
         // Wait for a client connection
         client_fd = accept(server_fd, (struct sockaddr *) &client_address, &client_address_size);
-
         if (client_fd == -1) {
-            //If client discconects it falls here
-            fatalError("accept");
+            fatalError("jhgvjhgvhj");
         }
         
-        // Create a child to deal with the new connection
+        // Create a child to deal with the new client
         new_pid = fork();
-        if (new_pid > 0) // Parent process
+        // Parent process
+        if (new_pid > 0)
         {
-            close(client_fd); //Close so we can continue listening for connections
+            // Close the socket to the new client
+            close(client_fd);
         }
-        else if (new_pid == 0) // Child process
+        // Child process
+        else if (new_pid == 0)
         {
             // Get the data from the client
             inet_ntop (client_address.sin_family, &client_address.sin_addr, client_presentation, sizeof client_presentation);
-            printf("New challenger approching from %s on port %d\n", client_presentation, client_address.sin_port);
+            printf("Received incomming connection from %s on port %d\n", client_presentation, client_address.sin_port);
             
-            //GAME LOGIC AND PROTOCOLS
-            attendBetPrice(client_fd); //Ask for the bet
-            
+            // Deal with the client
+            play(client_fd);
             // Finish the child process
             close(client_fd);
             exit(EXIT_SUCCESS);
@@ -209,16 +209,12 @@ void waitForConnections(int server_fd)
 /*
  Hear the request from the client and send an answer
  */
-void attendBetPrice(int client_fd) {
+void play(int client_fd) {
     char buffer[BUFFER_SIZE];
     int chars_read;
     int totalBetPrice;
     int dealerDeckSize = 2;
-    int dealerDeck[dealerDeckSize];
-    int dealerScore;
-    int playerScore;
     int clientMove;
-    int newCard;
     
     bzero(&buffer, BUFFER_SIZE);
     
@@ -269,6 +265,7 @@ void attendBetPrice(int client_fd) {
         }
         sscanf(buffer, "%d", &clientMove); //Client must send a number
         bzero(&buffer, BUFFER_SIZE);
+        
         if (clientMove == 1) { //HIT
             hitHand(clientHand);
             //SEND NEW CARD
@@ -278,34 +275,46 @@ void attendBetPrice(int client_fd) {
         }
     }while(clientMove == 1);
     
-    if (clientMove == 0){ //STAND
-        if (peekScore(clientHand)) ; //client already lost just stand
-        else{
-            int threshold = 5; //Que tanto nos la jugamos
-            int finish = 0;
-            
-            //DEALER LOGIC to Take cards
-            while (finish == 0)
-            {
-                if(serverHand->scoreX == 21 || serverHand->score == 21){ finish=1; } //Stand, we have a 21
-                else if(serverHand->scoreX > 21 && serverHand->score > 21) {finish=1;}
-                else if(serverHand->scoreX > 21) {
-                    if ( (21 - serverHand->score) > threshold) {
-                        hitHand(serverHand); //HIT
-                    }
-                    else{ finish = 1; }      //STAY
+    
+    if (peekScore(clientHand) > 21) ; //client already lost just stand
+    else{
+        int threshold = 5; //Que tanto nos la jugamos
+        //DEALER LOGIC to Take cards
+        int finish = 0;
+        while (finish == 0)
+        {
+            printf("FIN %d\n",serverHand->score);
+            if(serverHand->scoreX == 21 || serverHand->score == 21){ finish=1; }  //Stand, we have a 21
+            else if(serverHand->scoreX > 21 && serverHand->score > 21) {finish=1;}//We lost already
+            else if(serverHand->scoreX > 21) {
+                if ( (21 - serverHand->score) > threshold) {
+                    hitHand(serverHand); //HIT
                 }
-                else{
-                    if ( (21-serverHand->scoreX) > threshold) {
-                        hitHand(serverHand);
-                    }
-                    else{ finish=1;}
+                else{ finish = 1; }      //STAY
+            }
+            else{
+                if ( (21-serverHand->scoreX) > threshold) {
+                    hitHand(serverHand);
                 }
+                else{ finish=1;}
             }
         }
     }
+
     //SEND DEALER HAND
+    for (int i = 2; i < serverHand->size; i++) {
+        sprintf(buffer, "%d\n", serverHand->cards[i] );
+        if (send(client_fd, buffer, strlen(buffer) + 1, 0) == -1) printf("Could not send reply");
+        bzero(&buffer, BUFFER_SIZE);
+    }
+    //SEND A DONE
+    sprintf(buffer, "%d\n", -1 );
+    if (send(client_fd, buffer, strlen(buffer) + 1, 0) == -1) printf("Could not send reply");
+    bzero(&buffer, BUFFER_SIZE);
     //PRINT WINNER
+    printHand(serverHand, 0);
+    int winner = compareHands(clientHand, serverHand);
+    printf("%d",winner);
 }
 
 void fatalError(const char * message)

@@ -40,7 +40,7 @@ int main(int argc, char * argv[])
 
     printf("\n=== Blackjack Client ===\n");
     if (argc != 3) usage(argv[0]); // Check the correct arguments
-    signal(SIGINT, INThandler);
+    // signal(SIGINT, INThandler);
     //START
     connection_fd = openSocket(argv[1], argv[2]);
     gameStart(connection_fd);
@@ -118,10 +118,7 @@ void gameStart(int connection_fd)
     int startGameFlag;
     int f,s,f2,s2;
     int playerChoice;
-    int playerScore; //Player Score
-    int dealerScore; //Dealer's score
-    int blackjack = 0; //False for now
-    
+    int newCard;
     srand(time(0)); //Use the current time as seed generator
 
     printf("Place your bet (Number between 1 and 100):\n"); //We ask the player for the bet they'd like to do
@@ -146,21 +143,19 @@ void gameStart(int connection_fd)
     sscanf(buffer, "%d %d,%d %d", &f, &s, &f2, &s2);
     bzero(&buffer, BUFFER_SIZE);
 
-    printf("DEALER:\n");
-    int cds2[2] = {f2,s2};
-    Hand * serverHand = newHand(2, cds2);
+    printf("DEALER:\n");    
+    int cds[2] = {f,s};
+    Hand * serverHand = newHand(2, cds);
     printHand(serverHand,1);
 
     printf("YOU:\n");
-    int cds[2] = {f,s};
-    Hand * myHand = newHand(2, cds);
+    int cds2[2] = {f2,s2};
+    Hand * myHand = newHand(2, cds2);
     printHand(myHand,0);
     
-    int newCard;
     do{
         showOptions();
         playerChoice = readIntInRange(1,2);  
-        //Send OPTION to the server
         sprintf(buffer, "%d\n", playerChoice);
         if (send(connection_fd, buffer, strlen(buffer) + 1, 0) == -1 )fatalError("send");
         bzero(&buffer, BUFFER_SIZE);  
@@ -169,16 +164,44 @@ void gameStart(int connection_fd)
             //Wait NEW_CARD
             chars_read = recv(connection_fd, buffer, BUFFER_SIZE, 0);
             if (chars_read == -1) fatalError("recv");
-            sscanf(buffer, "%d", newCard);
+            sscanf(buffer, "%d", &newCard);
             bzero(&buffer, BUFFER_SIZE);
             //Ya tenemos NewCard, agregar a la mano y print
             appendCard(myHand, newCard);
-            printHand(myHand); 
+            printHand(myHand,0); 
         }
     } while( playerChoice == 1 ); //Player hit
     
     //Wait Dealer to send his hand
-    //print WINNER
+    int w;
+    do{
+        chars_read = recv(connection_fd, buffer, BUFFER_SIZE, 0);
+        if (chars_read == -1) fatalError("recv");
+        sscanf(buffer, "%d", &w);    
+        bzero(&buffer, BUFFER_SIZE);    
+        if (w>=0 && w<=52){ //They sent a card
+            appendCard(serverHand, w);
+        }
+    }while(w>0);
+    
+    printf("DEALER:\n");    
+    printHand(serverHand,0);
+    printf("YOU:\n");
+    printHand(myHand,0);
+
+    int winner = compareHands(myHand, serverHand);
+    if (winner==0)      {
+        printf("It is a tie\n");
+        printf("You keep your money\n");
+    }
+    else if (winner==1) {
+        printf("You win\n");
+        printf("You won $%d\n",betPrice*2);
+    }
+    else                {
+        printf("The house wins\n");
+        printf("You lost $%d\n",betPrice);
+    }
 }
 
 void fatalError(const char * message)
