@@ -136,6 +136,11 @@ Hand * getRandomHand( int handSize ){
     }
     return r;
 }
+//Score - first card, it is hidden
+int peekScore(Hand * h){
+    int fval = getCardValue(h->cards[0]);
+    return h->score - fval;
+}
 
 //hidden = Num of hidden cards
 void printHand(Hand * h, int hidden){
@@ -194,8 +199,6 @@ void hitHand(Hand * h){
  -1 h1<h2 h2 Wins
  */
 int compareHands(Hand * h1, Hand * h2){
-    
-    
     if (h1->score>21) { //h1 over 21
         if (h2->score>21) return 0; //h2 also over 21 TIE
         return -1;                  //h2 under 21     h2 Wins

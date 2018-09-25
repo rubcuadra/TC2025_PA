@@ -218,6 +218,7 @@ void attendBetPrice(int client_fd) {
     int dealerScore;
     int playerScore;
     int clientMove;
+    int newCard;
     
     bzero(&buffer, BUFFER_SIZE);
     
@@ -267,16 +268,26 @@ void attendBetPrice(int client_fd) {
             return;
         }
         sscanf(buffer, "%d", &clientMove); //Client must send a number
-        if (clientMove == 1) { //HIT
-            //CREATE CARD
-            //SEND IT
-        }
         bzero(&buffer, BUFFER_SIZE);
+        if (clientMove == 1) { //HIT
+            hitHand(clientHand);
+            //SEND NEW CARD
+            sprintf(buffer, "%d\n", clientHand->cards[clientHand->size-1] );
+            if (send(client_fd, buffer, strlen(buffer) + 1, 0) == -1) printf("Could not send reply");
+            bzero(&buffer, BUFFER_SIZE);
+        }
     }while(clientMove == 1);
     
-    //STAND
-    //We TAKE CARDS
+    if (clientMove == 0){ //STAND
+        if (peekScore(clientHand)) {
+            //client already lost just stand
+        }
+        else{
+            //We TAKE CARDS
+        }
+    }
     //Once We finish taking, send winner
+    
 }
 
 void fatalError(const char * message)
