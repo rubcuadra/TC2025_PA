@@ -29,6 +29,12 @@
 #define BUFFER_SIZE 1024
 #define MAX_QUEUE 5
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
+
 ///// FUNCTION DECLARATIONS
 void usage(char * program);
 void printLocalIPs();
@@ -37,12 +43,25 @@ void waitForConnections(int server_fd);
 void attendRequest(int client_fd);
 void * clientInterrupted (void * arg);
 
-int client_interrupted = 0;
+void msleep(int mmsDelay){
+    #ifdef _WIN32
+    Sleep(mmsDelay);
+    #else
+    usleep(mmsDelay*1000);  
+    #endif
+}
+//Wait for all sub procs to finish, stop listening incoming connections
+void mainCtrlcHandler(int arg);
+//Send the value to the client
+void clientCtrlcHandler(int arg);
 
+int client_interrupted = 0;
+int ssd = 0; //Server Shuting Down?
+int sfd;
 ///// MAIN FUNCTION
 int main(int argc, char * argv[])
 {
-    int server_fd;
+    signal(SIGINT, mainCtrlcHandler);
 
     printf("\n=== SERVER FOR COMPUTING THE VALUE OF pi ===\n");
 
@@ -56,11 +75,11 @@ int main(int argc, char * argv[])
 	printLocalIPs();
 
     // Start the server
-    server_fd = initServer(argv[1]);
-	// Listen for connections from the clients
-    waitForConnections(server_fd);
+    sfd = initServer(argv[1]);
+    // Listen for connections from the clients
+    waitForConnections(sfd);
     // Close the socket
-    close(server_fd);
+    close(sfd);
 
     return 0;
 }
@@ -227,6 +246,7 @@ void waitForConnections(int server_fd)
         }
         else if (new_pid == 0)
         {
+            signal(SIGINT, clientCtrlcHandler);
             // Close the main server socket to avoid interfering with the parent
             close(server_fd);
             printf("Child process %d dealing with client\n", getpid());
@@ -241,7 +261,6 @@ void waitForConnections(int server_fd)
         {
             fatalError("fork");
         }
-
     }
 }
 
@@ -280,7 +299,8 @@ void attendRequest(int client_fd)
     unsigned long int divisor = 3;
     unsigned long int counter = 0;
     
-    while(counter<iterations && client_interrupted == 0){
+    //While we haven't finished AND client is still waiting AND we are still up
+    while(counter<iterations && client_interrupted == 0 && ssd==0){
         result += sign * (4.0/divisor);
         sign *= -1;
         divisor += 2;
@@ -323,3 +343,16 @@ void * clientInterrupted (void * arg)
 
     pthread_exit(0);
 }
+
+void mainCtrlcHandler(){
+    printf("Shutting Down!\n");
+    msleep(500);//wait until all children are DONE sending (0.5 seconds)
+    close(sfd); // Close the socket
+}
+
+void clientCtrlcHandler(){ //It is called inside the sub proc, the main proc will never run this    
+    //Set variable shutdown to 1, it is used by the loop of PI
+    ssd = 1;
+}
+
+
