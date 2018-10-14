@@ -16,20 +16,25 @@
 #include <arpa/inet.h>
 // Custom libraries
 #include "fatal_error.h"
-
+#include <signal.h>
+#include <poll.h>
+#include <errno.h>
 #include <ifaddrs.h>
 
 #define BUFFER_SIZE 1024
 
+int waiting_server = 0;
+int connection_fd;
 ///// FUNCTION DECLARATIONS
 void usage(char * program);
 int openSocket(char * address, char * port);
-void requestPI(int connection_fd);
+void requestPI();
+void ctrlcHandler(int arg);
 
 ///// MAIN FUNCTION
 int main(int argc, char * argv[])
 {
-    int connection_fd;
+    signal(SIGINT, ctrlcHandler);
 
     printf("\n=== CLIENT FOR COMPUTING THE VALUE OF pi ===\n");
 
@@ -42,7 +47,7 @@ int main(int argc, char * argv[])
     // Start the server
     connection_fd = openSocket(argv[1], argv[2]);
 	// Listen for connections from the clients
-    requestPI(connection_fd);
+    requestPI();
     // Close the socket
     close(connection_fd);
 
@@ -113,7 +118,7 @@ int openSocket(char * address, char * port)
     return connection_fd;
 }
 
-void requestPI(int connection_fd)
+void requestPI()
 {
     char buffer[BUFFER_SIZE];
     int chars_read;
@@ -135,6 +140,7 @@ void requestPI(int connection_fd)
     // Clear the buffer
     bzero(buffer, BUFFER_SIZE);
 
+    waiting_server = 1;
     // RECV
     // Receive the request
     chars_read = recv(connection_fd, buffer, BUFFER_SIZE, 0);
@@ -143,7 +149,39 @@ void requestPI(int connection_fd)
         fatalError("recv");
     }
     sscanf(buffer, "%lf", &result);
-
+    waiting_server = 0;
     // Print the result
     printf("The value for PI is: %.20lf\n", result);
+}
+
+void ctrlcHandler(int arg){
+    if (waiting_server)
+    {
+        printf("Stopping...\n");
+        char buffer[BUFFER_SIZE];
+        int chars_read;
+        double result;
+
+        //Send ctrlc
+        sprintf(buffer, "316");
+        if (send(connection_fd, buffer, strlen(buffer)+1, 0) == -1)
+        {
+            fatalError("send");
+        }
+        
+        //Wait for the answer
+        chars_read = recv(connection_fd, buffer, BUFFER_SIZE, 0);
+        if (chars_read == -1)
+        {
+            fatalError("recv");
+        }
+        sscanf(buffer, "%lf", &result);
+        // Print the result
+        printf("The value for PI is: %.20lf\n", result);
+        exit(0);
+    }
+    else{
+        printf("Bye\n");
+        exit(0);
+    }
 }

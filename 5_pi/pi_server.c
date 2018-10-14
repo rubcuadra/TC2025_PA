@@ -316,8 +316,8 @@ void * clientInterrupted (void * arg)
     }
     sscanf(buffer, "%d", &resp); 
     
-    if(resp == 1){ //Client sent a 1, meaning they are leaving before we finish
-        printf("CLIENT LEAVING BEFORE TIME\n");
+    if(resp == 316){ //Client sent a 316, meaning they are leaving before we finish
+        printf("CLIENT WANTS TO LEAVE BEFORE TIME\n");
         client_interrupted = 1; 
     }
 
