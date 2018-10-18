@@ -113,7 +113,8 @@ int main(int argc, char * argv[])
     closeBank(&bank_data, &data_locks);
 
     // Finish the main thread
-    pthread_exit(NULL);
+    //If we do this then we should poll on threads, otherwise they can get stuck if client never leaves
+    // pthread_exit(NULL); 
 
     return 0;
 }
