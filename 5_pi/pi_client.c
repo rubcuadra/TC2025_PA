@@ -5,6 +5,9 @@
     Gilberto Echeverria
     gilecheverria@yahoo.com
     21/02/2018
+
+    MODIFIED by RUBEN CUADRA
+    13/OCT/2018
 */
 
 #include <stdio.h>
