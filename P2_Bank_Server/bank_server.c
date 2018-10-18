@@ -249,29 +249,48 @@ void * attentionThread(void * arg)
     //recieve/send and internal ops
     char buffer[BUFFER_SIZE];
     int chars_read;
-    int operation, account; float amount;
+    int account; float amount;
+    // FROM Bank Codes
+    int status = OK;  int operation = CHECK;
+    float balance = 0.0;
     // Receive the data for the bank, mutexes and socket file descriptor
     thread_data_t * tdt = (thread_data_t *) arg;
-    //Get info from client
-    chars_read = recv(tdt->connection_fd, buffer, sizeof buffer, 0);
-    if (chars_read == 0) {
-        printf("Client disconnected\n");
-        free(arg);
-        pthread_exit(NULL);
-    }
-    sscanf(buffer, "%d %d %f", &operation, &account, &amount);
-    bzero(&buffer, BUFFER_SIZE);
-    printf("Recieved: %d %d %f\n", operation, account, amount);
     // Loop to listen for messages from the client
-
-        // Receive the request
-
-        // Process the request being careful of data consistency
-
-        // Update the number of transactions
-
-        // Send a reply
-
+    while(interrupted==0 && operation!=EXIT){ //TODO: Poll?
+        //Get info from client
+        chars_read = recv(tdt->connection_fd, buffer, sizeof buffer, 0);
+        if (chars_read == 0) {
+            printf("Client disconnected\n");
+            free(arg);
+            pthread_exit(NULL);
+        }
+        sscanf(buffer, "%d %d %f", &operation, &account, &amount);
+        printf("Recieved: %d %d %f\n", operation, account, amount);
+        switch(operation){
+            // Process the request being careful of data consistency
+            case CHECK: 
+                // NO_ACCOUNT
+                // OK
+                break;
+            case DEPOSIT: 
+                // NO_ACCOUNT
+                // OK
+                break;
+            case WITHDRAW: // INSUFFICIENT
+                break;
+            // Update the number of transactions
+            case EXIT:
+                status    = BYE;
+                break;
+            default:
+                status    = ERROR;
+                break;
+        }
+        // Send the reply to client
+        sprintf(buffer, "%d %f", status, balance);
+        sendString(tdt->connection_fd, buffer);
+        bzero(&buffer, BUFFER_SIZE);
+    }        
     pthread_exit(NULL);
 }
 
