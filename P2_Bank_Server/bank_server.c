@@ -278,7 +278,6 @@ void * attentionThread(void * arg)
             pthread_exit(NULL);
         }
         sscanf(buffer, "%d %d %f", &operation, &account, &amount);
-        printf("Recieved: %d %d %f\n", operation, account, amount);
         // Process the request be careful of data consistency
         switch(operation){
             case CHECK: 
@@ -349,7 +348,6 @@ void * attentionThread(void * arg)
 */
 void closeBank(bank_t * bank_data, locks_t * data_locks)
 {
-    // printf("DEBUG: Clearing the memory for the thread\n");
     free(bank_data->account_array);
     free(data_locks->account_mutex);
 }
