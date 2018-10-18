@@ -290,9 +290,15 @@ void * attentionThread(void * arg)
                 break;
             case DEPOSIT: 
                 if (checkValidAccount(account)){
+                    //Put money
                     pthread_mutex_lock(&tdt->data_locks->account_mutex[account]);
                         tdt->bank_data->account_array[account].balance += amount; //Critical
                     pthread_mutex_unlock(&tdt->data_locks->account_mutex[account]);
+                    //Update # of global transactions
+                    pthread_mutex_lock(&tdt->data_locks->transactions_mutex);
+                        tdt->bank_data->total_transactions++; //Critical
+                    pthread_mutex_unlock(&tdt->data_locks->transactions_mutex);   
+                    //Prepare return
                     balance = tdt->bank_data->account_array[account].balance; 
                     status = OK;
                 }
@@ -300,11 +306,26 @@ void * attentionThread(void * arg)
                 break;
             case WITHDRAW: // INSUFFICIENT
                 if (checkValidAccount(account)){
-                    // status = OK;
+                    //Take money
+                    pthread_mutex_lock(&tdt->data_locks->account_mutex[account]);
+                        if(tdt->bank_data->account_array[account].balance < amount){
+                            status  = INSUFFICIENT;
+                            balance = tdt->bank_data->account_array[account].balance;
+                        }else{
+                            status  = OK;
+                            tdt->bank_data->account_array[account].balance -= amount; 
+                            balance = tdt->bank_data->account_array[account].balance;
+                        }
+                    pthread_mutex_unlock(&tdt->data_locks->account_mutex[account]);
+                    if( status == OK ){
+                        //Update # of global transactions
+                        pthread_mutex_lock(&tdt->data_locks->transactions_mutex);
+                            tdt->bank_data->total_transactions++; //Critical
+                        pthread_mutex_unlock(&tdt->data_locks->transactions_mutex);   
+                    }
                 }
                 else status = NO_ACCOUNT;
                 break;
-            // Update the number of transactions
             case EXIT:
                 status    = BYE;
                 break;

@@ -5,6 +5,9 @@
     Gilberto Echeverria
     gilecheverria@yahoo.com
     29/03/2018
+
+    MODIFIED BY RUBEN CUADRA
+    18/10/2018
 */
 
 #include <stdio.h>
@@ -148,7 +151,7 @@ void bankOperations(int connection_fd)
                 printf("\tThe balance in account %d is %.2f\n", account, balance);
                 break;
             case INSUFFICIENT:
-                printf("\tInsufficient funds for the transaction selected\n");
+                printf("\tInsufficient funds, Account %d has a balance of %.2f\n", account, balance);
                 break;
             case NO_ACCOUNT:
                 printf("\tInvalid acount number entered\n");
