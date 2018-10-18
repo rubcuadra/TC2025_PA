@@ -290,8 +290,11 @@ void * attentionThread(void * arg)
                 break;
             case DEPOSIT: 
                 if (checkValidAccount(account)){
-                    // balance = tdt->bank_data->account_array[account].balance; 
-                    // status = OK;
+                    pthread_mutex_lock(&tdt->data_locks->account_mutex[account]);
+                        tdt->bank_data->account_array[account].balance += amount; //Critical
+                    pthread_mutex_unlock(&tdt->data_locks->account_mutex[account]);
+                    balance = tdt->bank_data->account_array[account].balance; 
+                    status = OK;
                 }
                 else status = NO_ACCOUNT;
                 break;
@@ -312,8 +315,10 @@ void * attentionThread(void * arg)
         // Send the reply to client
         sprintf(buffer, "%d %f", status, balance);
         sendString(tdt->connection_fd, buffer);
+        //Reset stuff
         bzero(&buffer, BUFFER_SIZE);
-        balance = 0.0;
+        balance = 0.0; 
+        amount  = 0.0;
     }        
     pthread_exit(NULL);
 }
