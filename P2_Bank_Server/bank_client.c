@@ -111,7 +111,7 @@ void bankOperations(int connection_fd)
             case 'w':
                 printf("Enter account: ");
                 scanf("%d", &account);
-                printf("Enter the amount to deposit: ");
+                printf("Enter the amount to withdraw: ");
                 scanf("%f", &amount);
                 operation = WITHDRAW;
                 break;
