@@ -184,12 +184,14 @@ int recvString(int connection_fd, char * buffer, int size)
     // Error when reading
     if ( chars_read == -1 )
     {
-        fatalError("ERROR: recv");
+        // fatalError("ERROR: recv");
+        // printf("ERROR: recv\n");
+        return 0;
     }
     // Connection finished
     if ( chars_read == 0 )
     {
-        printf("Connection disconnected\n");
+        // printf("Connection disconnected\n");
         return 0;
     }
 

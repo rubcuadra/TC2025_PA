@@ -138,7 +138,7 @@ void bankOperations(int connection_fd)
         // Receive the response
         if ( !recvString(connection_fd, buffer, BUFFER_SIZE) )
         {
-            printf("Server closed the connection\n");
+            printf("There was a problem processing the request, try again later\n");
             break;
         }
         // Extract the data
