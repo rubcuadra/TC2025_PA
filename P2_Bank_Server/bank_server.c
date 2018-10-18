@@ -75,6 +75,7 @@ void closeBank(bank_t * bank_data, locks_t * data_locks);
 /*
     EXAM: Add your function declarations here
 */
+void loadAccounts(bank_t * bank_data);
 void onCtrlC(int arg);
 int interrupted = 0;
 
@@ -159,6 +160,18 @@ void initBank(bank_t * bank_data, locks_t * data_locks)
         //data_locks->account_mutex[i] = PTHREAD_MUTEX_INITIALIZER;
         pthread_mutex_init(&data_locks->account_mutex[i], NULL);
     }
+
+    loadAccounts(bank_data);
+}
+
+void loadAccounts(bank_t * bank_data){
+    //Set IDs
+    for (int i=0; i<NUM_ACCOUNTS; i++) bank_data->account_array[i].id = i;
+    //Set balances
+    bank_data->account_array[0].balance =  316.00;
+    bank_data->account_array[1].balance = -175.50;
+    bank_data->account_array[2].balance =   50.00;
+    bank_data->account_array[3].balance = 2000.00;
 }
 
 /*
@@ -266,17 +279,27 @@ void * attentionThread(void * arg)
         }
         sscanf(buffer, "%d %d %f", &operation, &account, &amount);
         printf("Recieved: %d %d %f\n", operation, account, amount);
+        // Process the request be careful of data consistency
         switch(operation){
-            // Process the request being careful of data consistency
             case CHECK: 
-                // NO_ACCOUNT
-                // OK
+                if (checkValidAccount(account)){ //account is an index
+                    balance = tdt->bank_data->account_array[account].balance; 
+                    status  = OK;
+                }
+                else status = NO_ACCOUNT;
                 break;
             case DEPOSIT: 
-                // NO_ACCOUNT
-                // OK
+                if (checkValidAccount(account)){
+                    // balance = tdt->bank_data->account_array[account].balance; 
+                    // status = OK;
+                }
+                else status = NO_ACCOUNT;
                 break;
             case WITHDRAW: // INSUFFICIENT
+                if (checkValidAccount(account)){
+                    // status = OK;
+                }
+                else status = NO_ACCOUNT;
                 break;
             // Update the number of transactions
             case EXIT:
@@ -290,6 +313,7 @@ void * attentionThread(void * arg)
         sprintf(buffer, "%d %f", status, balance);
         sendString(tdt->connection_fd, buffer);
         bzero(&buffer, BUFFER_SIZE);
+        balance = 0.0;
     }        
     pthread_exit(NULL);
 }
