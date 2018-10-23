@@ -57,6 +57,7 @@ void waitForConnections(int server_fd, gm_t * gm_data);
 void shutDownGM(gm_t * gm_data);
 void * attentionThread(void * arg);
 void onCtrlC(int arg);
+void playVsPlayer(int client_fd, int difficulty);
 int interrupted = 0;
 
 ///// MAIN FUNCTION
@@ -217,13 +218,13 @@ void waitForConnections(int server_fd, gm_t * gm_data)
 */
 void * attentionThread(void * arg)
 {
-    //recieve/send and internal ops
     char buffer[BUFFER_SIZE];
     int chars_read;
-    int ans;
+    int ans,difficulty,table,t;
     thread_data_t * tdt = (thread_data_t *) arg;
+    int finish = 0;
     // Loop to listen for messages from the client
-    while(interrupted==0){ 
+    while(interrupted==0 && finish==0){ 
         
         //Get choice from client
         chars_read = recv(tdt->client_fd, buffer, sizeof buffer, 0);
@@ -232,84 +233,60 @@ void * attentionThread(void * arg)
             free(arg);
             pthread_exit(NULL);
         }
-        sscanf(buffer, "%d", &ans);
-        
-        //PvE
-            //Dificultad
-                //Empezar juego  
-        //PvP
-            //Mandar mesa (-1 es automatico)
-                //Empezar Juego
+        t = sscanf(buffer, "%d", &ans);       //Read choice
+        bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
         switch(ans){
-            case PVE:
+            case PVE: //VsComputer
+                sprintf(buffer, "%d", OK);           //Fine to continue
+                sendString(tdt->client_fd, buffer);  //Return answer and continue
+                //Ask difficulty
+                chars_read = recv(tdt->client_fd, buffer, sizeof buffer, 0);
+                if (chars_read == 0) {
+                    printf("Client disconnected\n");
+                    free(arg);
+                    pthread_exit(NULL);
+                }
+                t = sscanf(buffer, "%d", &difficulty);    //Read choice
+                bzero(&buffer, BUFFER_SIZE);              //Clean Buffer
+                sprintf(buffer, "%d", t==1?OK:ERROR);     //Matched option
+                sendString(tdt->client_fd, buffer);       //Return answer and continue
+                playVsPlayer(tdt->client_fd, difficulty); //Will call subproc in python
                 break;
-            case PVP:
+            case PVP: //VsPlayer
+                sprintf(buffer, "%d", OK);           //Fine to continue
+                sendString(tdt->client_fd, buffer);  //Return answer and continue
+                //Ask Table
+                chars_read = recv(tdt->client_fd, buffer, sizeof buffer, 0);
+                if (chars_read == 0) {
+                    printf("Client disconnected\n");
+                    free(arg);
+                    pthread_exit(NULL);
+                }
+                t = sscanf(buffer, "%d", &table);    //Read choice
+                bzero(&buffer, BUFFER_SIZE);         //Clean Buffer
+                if (table > 0 && table < NUM_TABLES) //Check if it is a valid table
+                {
+                    
+                }
+                else{
+                    
+                }
+                
+                    //if it is free enter and play
+                    //else wait until it gets free
+                break;
+            default:
+                sprintf(buffer, "%d", ERROR);         //Matched option
+                sendString(tdt->client_fd, buffer);   //Return answer and continue
+                finish = 1;                           //Error BYE
                 break;
         }
-        
-        // Process the request be careful of data consistency
-        // switch(operation){
-        //     case CHECK: 
-        //         if (checkValidAccount(account)){ //account is an index
-        //             balance = tdt->bank_data->account_array[account].balance; 
-        //             status  = OK;
-        //         }
-        //         else status = NO_ACCOUNT;
-        //         break;
-        //     case DEPOSIT: 
-        //         if (checkValidAccount(account)){
-        //             //Put money
-        //             pthread_mutex_lock(&tdt->data_locks->account_mutex[account]);
-        //                 tdt->bank_data->account_array[account].balance += amount; //Critical
-        //             pthread_mutex_unlock(&tdt->data_locks->account_mutex[account]);
-        //             //Update # of global transactions
-        //             pthread_mutex_lock(&tdt->data_locks->transactions_mutex);
-        //                 tdt->bank_data->total_transactions++; //Critical
-        //             pthread_mutex_unlock(&tdt->data_locks->transactions_mutex);   
-        //             //Prepare return
-        //             balance = tdt->bank_data->account_array[account].balance; 
-        //             status = OK;
-        //         }
-        //         else status = NO_ACCOUNT;
-        //         break;
-        //     case WITHDRAW: // INSUFFICIENT
-        //         if (checkValidAccount(account)){
-        //             //Take money
-        //             pthread_mutex_lock(&tdt->data_locks->account_mutex[account]);
-        //                 if(tdt->bank_data->account_array[account].balance < amount){
-        //                     status  = INSUFFICIENT;
-        //                     balance = tdt->bank_data->account_array[account].balance;
-        //                 }else{
-        //                     status  = OK;
-        //                     tdt->bank_data->account_array[account].balance -= amount; 
-        //                     balance = tdt->bank_data->account_array[account].balance;
-        //                 }
-        //             pthread_mutex_unlock(&tdt->data_locks->account_mutex[account]);
-        //             if( status == OK ){
-        //                 //Update # of global transactions
-        //                 pthread_mutex_lock(&tdt->data_locks->transactions_mutex);
-        //                     tdt->bank_data->total_transactions++; //Critical
-        //                 pthread_mutex_unlock(&tdt->data_locks->transactions_mutex);   
-        //             }
-        //         }
-        //         else status = NO_ACCOUNT;
-        //         break;
-        //     case EXIT:
-        //         status    = BYE;
-        //         break;
-        //     default:
-        //         status    = ERROR;
-        //         break;
-        // }
-        // // Send the reply to client
-        // sprintf(buffer, "%d %f", status, balance);
-        // sendString(tdt->connection_fd, buffer);
-        // //Reset stuff
-        // bzero(&buffer, BUFFER_SIZE);
-        // balance = 0.0; 
-        // amount  = 0.0;
     }        
     pthread_exit(NULL);
+}
+
+void playVsPlayer(int client_fd, int difficulty){
+
 }
 
 /*
