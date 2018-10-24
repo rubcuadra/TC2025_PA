@@ -25,14 +25,11 @@
 #define MAX_QUEUE 5
 
 //Table struct
-//EMPTY => No Players       
-//FREE  => 1 player missing
-typedef enum table_status {EMPTY,FREE,PLAYING,GAME_OVER} table_s;
 typedef struct table_struct {
     int tid;
     int p1_connection_fd;
     int p2_connection_fd;
-    int status;
+    int status; //ENUM
     //Mutex to wait until status == free or empty?
 } table_t;
 
@@ -58,6 +55,10 @@ void shutDownGM(gm_t * gm_data);
 void * attentionThread(void * arg);
 void onCtrlC(int arg);
 void playVsPlayer(int client_fd, int difficulty);
+void startGame(table_t * table); //Contains clients_fd
+
+table_t * getRandomTable(table_t * tables_array);
+
 int interrupted = 0;
 
 ///// MAIN FUNCTION
@@ -225,7 +226,6 @@ void * attentionThread(void * arg)
     int finish = 0;
     // Loop to listen for messages from the client
     while(interrupted==0 && finish==0){ 
-        
         //Get choice from client
         chars_read = recv(tdt->client_fd, buffer, sizeof buffer, 0);
         if (chars_read == 0) {
@@ -248,7 +248,7 @@ void * attentionThread(void * arg)
                 }
                 t = sscanf(buffer, "%d", &difficulty);    //Read choice
                 bzero(&buffer, BUFFER_SIZE);              //Clean Buffer
-                sprintf(buffer, "%d", t==1?OK:ERROR);     //Matched option
+                sprintf(buffer, "%d", t==1?OK:WRONG_DIFFICULTY);     //Matched option
                 sendString(tdt->client_fd, buffer);       //Return answer and continue
                 playVsPlayer(tdt->client_fd, difficulty); //Will call subproc in python
                 break;
@@ -264,25 +264,56 @@ void * attentionThread(void * arg)
                 }
                 t = sscanf(buffer, "%d", &table);    //Read choice
                 bzero(&buffer, BUFFER_SIZE);         //Clean Buffer
-                if (table > 0 && table < NUM_TABLES) //Check if it is a valid table
-                {
-                    
+                //Check if it is a valid table
+                if(table == RANDOM_TABLE || (table >= 0  && table < NUM_TABLES) ){ 
+                    table_t *tt = table==RANDOM_TABLE?getRandomTable(tdt->gm_data->tables_array):&(tdt->gm_data->tables_array[table]);
+                    //while(tt->status==PLAYING) {sleep(5000);}
+                    switch(tt->status){
+                        case EMPTY: 
+                            //LOCK
+                                //Assign user to table 
+                                //Change table status to FREE
+                            //UNLOCK -> toFree(connectionfd, table)
+                            //SEND him to wait for other player (Client waits GAME_STARTED flag)
+                                //ERROR sending, return to EMPTY table toEmpty(table)
+                            //FINISH Thread
+                            break;
+                        case FREE:  
+                            //Assign user to table(WHERE px_connection_id == -1)
+                            //CHECK other user is still connected
+                            //IF thatUserstillconnected 
+                                //CHANGE table status to PLAYING
+                                //startGame(table);
+                            //ELSE 
+                                //leave it as FREE
+                                //SEND him to wait for other player (Client waits GAME_STARTED flag)
+                            break;
+                    }
+                }else{
+                    sprintf(buffer, "%d", WRONG_TABLE);   //Matched option
+                    sendString(tdt->client_fd, buffer);   //Return answer and continue    
                 }
-                else{
-                    
-                }
-                
-                    //if it is free enter and play
-                    //else wait until it gets free
+                break;
+            case EXIT:
+                sprintf(buffer, "%d", BYE);           //Prepare BYE
+                sendString(tdt->client_fd, buffer);   //send it
+                finish = 1;                           //BYE
                 break;
             default:
-                sprintf(buffer, "%d", ERROR);         //Matched option
-                sendString(tdt->client_fd, buffer);   //Return answer and continue
-                finish = 1;                           //Error BYE
-                break;
+                sprintf(buffer, "%d", ERROR);         //prepare ERROR
+                sendString(tdt->client_fd, buffer);   //send it
+                break;                                //Continue
         }
     }        
     pthread_exit(NULL);
+}
+
+table_t * getRandomTable(table_t * tables_array){
+    return &tables_array[0]; //Maybe return a table based on priority. FREE -> EMPTY -> PLAYING
+}
+
+void startGame(table_t * table){
+
 }
 
 void playVsPlayer(int client_fd, int difficulty){
