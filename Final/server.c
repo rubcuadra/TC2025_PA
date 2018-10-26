@@ -30,11 +30,12 @@ typedef struct table_struct {
     int p1_connection_fd;
     int p2_connection_fd;
     int status; //ENUM
-    //Mutex to wait until status == free or empty?
+    pthread_mutex_t table_mutex; //For updating status/fds
 } table_t;
 
 // GM Struct
 typedef struct game_master_struct {
+    pthread_mutex_t matches_mutex; //For wins/played
     int total_wins;         // Store the total number of wins against players
     int total_played;       // Store the total number of played matches against players
     table_t * tables_array; // An array to the tables
@@ -123,6 +124,7 @@ void initTables(gm_t * gm_data)
     
     // Allocate the arrays in the structures
     gm_data->tables_array = malloc(NUM_TABLES * sizeof (table_t));
+    pthread_mutex_init(&gm_data->matches_mutex, NULL);
     // set tables data
     for (int i = 0; i < NUM_TABLES; ++i)
     {
@@ -130,6 +132,7 @@ void initTables(gm_t * gm_data)
         gm_data->tables_array[i].status = EMPTY;
         gm_data->tables_array[i].p1_connection_fd = -1;
         gm_data->tables_array[i].p2_connection_fd = -1;
+        pthread_mutex_init(&gm_data->tables_array[i].table_mutex, NULL);
     }
 }
 
@@ -171,10 +174,7 @@ void waitForConnections(int server_fd, gm_t * gm_data)
             
         }
 		// Timeout finished without reading anything
-        else if (poll_response == 0)
-        {
-            // printf("No response after %d seconds\n", timeout);
-        }
+        else if (poll_response == 0){} // printf("No response after %d seconds\n", timeout);
 		// There is something ready at the socket
         else
         {
@@ -251,6 +251,7 @@ void * attentionThread(void * arg)
                 sprintf(buffer, "%d", t==1?OK:WRONG_DIFFICULTY);     //Matched option
                 sendString(tdt->client_fd, buffer);       //Return answer and continue
                 playVsPlayer(tdt->client_fd, difficulty); //Will call subproc in python
+                finish = 1;
                 break;
             case PVP: //VsPlayer
                 sprintf(buffer, "%d", OK);           //Fine to continue
@@ -267,26 +268,75 @@ void * attentionThread(void * arg)
                 //Check if it is a valid table
                 if(table == RANDOM_TABLE || (table >= 0  && table < NUM_TABLES) ){ 
                     table_t *tt = table==RANDOM_TABLE?getRandomTable(tdt->gm_data->tables_array):&(tdt->gm_data->tables_array[table]);
-                    //while(tt->status==PLAYING) {sleep(5000);}
+                    //TODO
+                    pthread_mutex_lock(&tt->table_mutex);
                     switch(tt->status){
-                        case EMPTY: 
-                            //LOCK
-                                //Assign user to table 
-                                //Change table status to FREE
-                            //UNLOCK -> toFree(connectionfd, table)
-                            //SEND him to wait for other player (Client waits GAME_STARTED flag)
-                                //ERROR sending, return to EMPTY table toEmpty(table)
-                            //FINISH Thread
+                        case EMPTY: //Assign user to table, both fd are free, pick the first one
+                            tt->p1_connection_fd = tdt->client_fd;
+                            tt->status = FREE; //Change table status to FREE (1 empty seat)
+                            sprintf(buffer, "%d", 1); //Send number of users in table
+                            if ( send(tdt->client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+                            {
+                                //IF it fails, return to EMPTY and release lock
+                                tt->p1_connection_fd = -1;
+                                tt->status = EMPTY;
+                            } //After this it is the same as default, leave until another one picks the table
+                        default: //PLAYING? this is an error, it should have been blocked
+                            pthread_mutex_unlock(&tt->table_mutex);
+                            pthread_exit(NULL);
                             break;
-                        case FREE:  
-                            //Assign user to table(WHERE px_connection_id == -1)
-                            //CHECK other user is still connected
-                            //IF thatUserstillconnected 
-                                //CHANGE table status to PLAYING
-                                //startGame(table);
-                            //ELSE 
-                                //leave it as FREE
-                                //SEND him to wait for other player (Client waits GAME_STARTED flag)
+                        case FREE: //Assign user to table(WHERE px_connection_id == -1)
+                            int opponent_fd = -1;
+                            int inTable = 2;
+                            if     (tt->p1_connection_fd == -1) {
+                                tt->p1_connection_fd = tdt->client_fd;
+                                opponent_fd = tt->p2_connection_fd;
+                            }
+                            else if(tt->p2_connection_fd == -1) {
+                                tt->p2_connection_fd = tdt->client_fd;
+                                opponent_fd = tt->p1_connection_fd;
+                            }
+                            else   { //Weird error, FREE but no fd, reset table
+                                tt->p1_connection_fd = -1;
+                                tt->p2_connection_fd = -1;
+                                tt->status = EMPTY;
+                                pthread_mutex_unlock(&tt->table_mutex);
+                                pthread_exit(NULL);
+                            }
+                            
+                            //CHECK opponent is still connected
+                            sprintf(buffer, "%d", inTable); //Send number of users in table to OPPONENT that was waiting
+                            if ( send( opponent_fd, buffer, strlen(buffer)+1, 0) == -1 ) 
+                            {   //IF it fails then the player that was waiting is gone, remove him
+                                inTable -= 1; 
+                                if (tt->p1_connection_fd == opponent_fd) tt->p1_connection_fd = -1;
+                                else                                     tt->p2_connection_fd = -1;
+                                tt->status = FREE;
+                            } //After this it is the same as default, leave until another one picks the table
+                            
+                            //CHECK that we are still connected
+                            bzero(&buffer, BUFFER_SIZE);    //Clean Buffer
+                            sprintf(buffer, "%d", inTable); //Send number of users in table to OUR client
+                            if ( send( tdt->client_fd, buffer, strlen(buffer)+1, 0) == -1 ) 
+                            {   //IF it fails then the our client is gone, remove him
+                                inTable -= 1; 
+                                if (tt->p1_connection_fd == tdt->client_fd) tt->p1_connection_fd = -1;
+                                else                                        tt->p2_connection_fd = -1;
+                                if (inTable == 0 ) tt->status = EMPTY; 
+                            } 
+                            
+                            if (inTable == 2) //START MATCH
+                            {
+                                tt->status = PLAYING;
+                                startGame(tt); //Here they play
+                                //GAME IS OVER, FREE EVERYTHING
+                                tt->p1_connection_fd = -1;
+                                tt->p2_connection_fd = -1;
+                                tt->status = EMPTY;
+                            }
+
+                            pthread_mutex_unlock(&tt->table_mutex);
+                            pthread_exit(NULL);
                             break;
                     }
                 }else{
@@ -305,24 +355,33 @@ void * attentionThread(void * arg)
                 break;                                //Continue
         }
     }        
-    pthread_exit(NULL);
+    pthread_exit(NULL); //we get here with the finish = 1 or interrupted
 }
 
+//TODO
 table_t * getRandomTable(table_t * tables_array){
-    return &tables_array[0]; //Maybe return a table based on priority. FREE -> EMPTY -> PLAYING
+    //First try for a FREE table (somebody is waiting)
+    for (int i = 0; i < NUM_TABLES; ++i)
+        if ( tables_array[i].status == FREE) 
+            return &tables_array[i];
+    //Then try for an EMPTY table (nobody is waiting)
+    for (int i = 0; i < NUM_TABLES; ++i)
+        if ( tables_array[i].status == EMPTY) 
+            return &tables_array[i];
+    return  &tables_array[0]; //everything is FULL, just return the first one
 }
 
+//Table is in status playing and with locked mutex
 void startGame(table_t * table){
-
+    printf("PLAYING\n");
+    
 }
 
+//Spawn proc to play for us
 void playVsPlayer(int client_fd, int difficulty){
 
 }
 
-/*
-    Free all the malloc memory
-*/
 void shutDownGM(gm_t * gm_data){
     free(gm_data->tables_array);
 }
