@@ -245,16 +245,57 @@ int canMove(onitama_board_t * oniBoard,players_s p,card_t * c,int fromRow,int fr
 	return 0; //False
 }
 
-// def canMove(self, player, fromCell, card, toCell):
-//         fromRow, fromCol = fromCell
-//         toRow,     toCol = toCell
-//         #Checar indices
-//         if fromRow > -1 and toRow > -1 and fromCol > -1 and toCol > -1 and fromRow < 5 and toRow < 5 and fromCol < 5 and toCol < 5:
-//             #Checar indices origen y destino (que no se salgan)
-//             #Origin is player's token
-//             #Destin is NOT player's token
-//             #Player has that card
-//             if self.isPlayer(player,self[fromRow][fromCol]) and not self.isPlayer(player,self[toRow][toCol]) and card in self.cards[player]:
-//                 mov = (toCell[0]-fromCell[0],toCell[1]-fromCell[1]) if player is self.BLUE else (fromCell[0]-toCell[0],fromCell[1]-toCell[1])
-//                 return mov in OnitamaCards[card]
-//         return False
+int move(onitama_board_t * oniboard,players_s p,card_t * c,int fromRow,int fromCol,int toRow,int toCol){
+	if(canMove(oniboard,p,c,fromRow,fromCol,toRow,toCol) == 0) return 0;
+	//Update Board	
+	int toToken   = oniboard->board[toRow][toCol];     //It will be overwritten
+	oniboard->board[toRow][toCol]     = oniboard->board[fromRow][fromCol];
+	oniboard->board[fromRow][fromCol] = EMPTY; 		   //From goes EMPTY
+	//Update Cards
+	card_t * standBy = oniboard->cards[4];
+	if (p == BLUE)
+	{
+		if(oniboard->cards[0]->id==c->id) //Switch with 0
+		{
+			oniboard->cards[4] = oniboard->cards[0];
+			oniboard->cards[0] = standBy;
+		}
+		else{ 							  //Switch with 1
+			oniboard->cards[4] = oniboard->cards[1];
+			oniboard->cards[1] = standBy;
+		}
+	}
+	else
+	{
+		if(oniboard->cards[2]->id==c->id) //Switch with 2
+		{
+			oniboard->cards[4] = oniboard->cards[2];
+			oniboard->cards[2] = standBy;
+		}
+		else{ 							  //Switch with 3
+			oniboard->cards[4] = oniboard->cards[3];
+			oniboard->cards[3] = standBy;
+		}
+	}
+	return 1;
+}
+
+int getWinner(onitama_board_t * oniboard){
+	//A master arrived to the other start
+	if (oniboard->board[0][2] == BLUE_MASTER) return BLUE;
+	if (oniboard->board[4][2] == RED_MASTER)  return RED;
+
+	int red_alive = 0, blue_alive = 0;
+	for (int i = 0; i < BOARD_SIZE; ++i)
+	{
+		for (int j = 0; j < BOARD_SIZE; ++j)
+		{
+			if      ( oniboard->board[i][j] == BLUE_MASTER) blue_alive = 1;
+			else if ( oniboard->board[i][j] ==  RED_MASTER) red_alive  = 1;
+			if( red_alive==1 && blue_alive==1) return NO_PLAYER; //No Winner yet
+		}
+	}
+	//Case both alive already checked, just 1 master remains
+	if (red_alive==1) return RED;
+	else 			  return BLUE;
+}
