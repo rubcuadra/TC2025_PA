@@ -12,9 +12,13 @@ typedef struct movement{
 typedef struct card {
 	int id;
 	char        *  name;
-	movement_t  ** movements;
+	movement_t  ** movements; //we iterate until MAX_MOVEMENTS_PER_CARD || if it is NULL
 } card_t;
 
+//Cards len == 5; 
+//	0,1 -> BLUE
+//	2,3 -> RED
+//	4   -> EXTRA
 typedef struct onitama {
 	card_t ** cards;//We point to the deck
     int ** board;   //Matrix with valid_tokens values
@@ -25,6 +29,8 @@ void initBoard(onitama_board_t * oniBoard);
 void destroyBoard(onitama_board_t * oniBoard);
 void destroyOnitama();
 void print(onitama_board_t * oniBoard);
+int canMove(onitama_board_t * oniBoard,players_s p,card_t * c,int fromRow,int fromCol,int toRow,int toCol);
+int tokenIsOfPlayer(players_s p, tokens_s tok);
 //For Debug
 int main();
 

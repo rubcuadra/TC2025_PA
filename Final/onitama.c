@@ -193,6 +193,14 @@ void print(onitama_board_t * oniBoard){
 		}
 		printf("\n");
 	}
+	printf("BLUE\n");
+	printf("\t%s\n",oniBoard->cards[0]->name);
+	printf("\t%s\n",oniBoard->cards[1]->name);
+	printf("RED\n");
+	printf("\t%s\n",oniBoard->cards[2]->name);
+	printf("\t%s\n",oniBoard->cards[3]->name);
+	printf("EXTRA\n");
+	printf("\t%s\n",oniBoard->cards[4]->name);	
 }
 
 void destroyOnitama(){
@@ -204,3 +212,49 @@ void destroyOnitama(){
 	}
 	free(deck);
 }
+
+int tokenIsOfPlayer(players_s p, tokens_s tok){
+	return p==BLUE?(tok == BLUE_MASTER || tok == BLUE_STUDENT):(tok == RED_MASTER  || tok == RED_STUDENT );
+}
+
+int canMove(onitama_board_t * oniBoard,players_s p,card_t * c,int fromRow,int fromCol,int toRow,int toCol){
+	//Cells in range
+	if (fromRow > -1 && toRow > -1 && fromCol > -1 && toCol > -1 && fromRow < BOARD_SIZE && toRow < BOARD_SIZE && fromCol < BOARD_SIZE && toCol < BOARD_SIZE){
+		// From is player's token AND To is not players token
+        if( tokenIsOfPlayer(p, oniBoard->board[fromRow][fromCol]) && tokenIsOfPlayer(p, oniBoard->board[toRow][toRow])==0 )
+        {
+        	// Validate that the player has that card 
+        	if ( (p==BLUE && (oniBoard->cards[0]->id==c->id || oniBoard->cards[1]->id==c->id)) || 
+        	     (p==RED  && (oniBoard->cards[2]->id==c->id || oniBoard->cards[3]->id==c->id)) )
+        	{ 	
+        		// Get movement vector
+        		int movement_x = p==BLUE?toRow-fromRow:fromRow-toRow;
+        		int movement_y = p==BLUE?toCol-fromCol:fromCol-toCol;
+        		//Validate card generates that movement
+				for (int i = 0; i<MAX_MOVEMENTS_PER_CARD; ++i)
+				{
+					if (c->movements[i] == NULL) break; //No more movements
+					if (c->movements[i]->x == movement_x && 
+						c->movements[i]->y == movement_y )
+						return 1; //Valid Movement
+				}        		
+        	}
+
+        }
+	}
+	return 0; //False
+}
+
+// def canMove(self, player, fromCell, card, toCell):
+//         fromRow, fromCol = fromCell
+//         toRow,     toCol = toCell
+//         #Checar indices
+//         if fromRow > -1 and toRow > -1 and fromCol > -1 and toCol > -1 and fromRow < 5 and toRow < 5 and fromCol < 5 and toCol < 5:
+//             #Checar indices origen y destino (que no se salgan)
+//             #Origin is player's token
+//             #Destin is NOT player's token
+//             #Player has that card
+//             if self.isPlayer(player,self[fromRow][fromCol]) and not self.isPlayer(player,self[toRow][toCol]) and card in self.cards[player]:
+//                 mov = (toCell[0]-fromCell[0],toCell[1]-fromCell[1]) if player is self.BLUE else (fromCell[0]-toCell[0],fromCell[1]-toCell[1])
+//                 return mov in OnitamaCards[card]
+//         return False
