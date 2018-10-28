@@ -13,21 +13,24 @@
 card_t     * deck;//Cards 
 movement_t * vm;  //Valid Movements
 
-int main(){
-	initOnitama();
-		onitama_board_t onit;
-		initBoard(&onit);
-			print(&onit);
-		destroyBoard(&onit);
-	destroyOnitama();
-	return 0;
-}
+//SIMPLE EXAMPLE
+// int main(){
+// 	initOnitama();
+// 		onitama_board_t onit;
+// 		initBoard(&onit);
+// 			print(&onit);
+// 			int r = move(&onit,BLUE, getCard("TIGER") , 4,0,2,0 );
+// 			if(r) print(&onit);
+// 		destroyBoard(&onit);
+// 	destroyOnitama();
+// 	return 0;
+// }
 
 //Should be called before creating boards, inits data
 void initOnitama(){
 	//Init generators
 	time_t t; 
-	srand((unsigned) time(&t));
+	srand(0); //srand((unsigned) time(&t));
 	//Movements inside the matrix used by the cards	
 	vm = malloc(NUM_CARDS * sizeof(card_t)); 
 	vm[0].x  =  1; vm[0].y  =  1; //DR  0
@@ -203,6 +206,19 @@ void print(onitama_board_t * oniBoard){
 	printf("\t%s\n",oniBoard->cards[4]->name);	
 }
 
+card_t * getCard(char * name){
+	for (int i = 0; i < NUM_CARDS; ++i)
+		if( strcmp( deck[i].name,name) == 0 ) 
+			return &deck[i];
+	return NULL;
+}
+
+card_t * getCardById(int _id){
+	if(_id >= 0 && _id < NUM_CARDS) return &deck[_id];
+	return NULL;
+}
+
+
 void destroyOnitama(){
 	free(vm);
 	for (int i = 0; i < NUM_CARDS; ++i)
@@ -248,9 +264,9 @@ int canMove(onitama_board_t * oniBoard,players_s p,card_t * c,int fromRow,int fr
 int move(onitama_board_t * oniboard,players_s p,card_t * c,int fromRow,int fromCol,int toRow,int toCol){
 	if(canMove(oniboard,p,c,fromRow,fromCol,toRow,toCol) == 0) return 0;
 	//Update Board	
-	int toToken   = oniboard->board[toRow][toCol];     //It will be overwritten
+	// int toToken   = oniboard->board[toRow][toCol]; //maybe check if it is a master or endline for gameover?
 	oniboard->board[toRow][toCol]     = oniboard->board[fromRow][fromCol];
-	oniboard->board[fromRow][fromCol] = EMPTY; 		   //From goes EMPTY
+	oniboard->board[fromRow][fromCol] = EMPTY_TOKEN; 		   //From goes EMPTY
 	//Update Cards
 	card_t * standBy = oniboard->cards[4];
 	if (p == BLUE)

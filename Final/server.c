@@ -19,6 +19,7 @@
 #include "codes.h"
 #include "sockets.h"
 #include "fatal_error.h"
+#include "onitama.h"
 
 #define NUM_TABLES 5
 #define BUFFER_SIZE 1024
@@ -31,6 +32,7 @@ typedef struct table_struct {
     int p2_connection_fd;
     int status; //ENUM
     pthread_mutex_t table_mutex; //For updating status/fds
+    onitama_board_t oni_board;
 } table_t;
 
 // GM Struct
@@ -69,6 +71,7 @@ int main(int argc, char * argv[])
 
     int server_fd;
     gm_t gm_data; //GameMaster data
+    
     printf("\n=== ONITAMA SERVER ===\n");
     // Configure the handler to catch SIGINT
     setupHandlers();
@@ -76,21 +79,125 @@ int main(int argc, char * argv[])
 	printLocalIPs();
     // Initialize the data structures
     initTables(&gm_data);
-    // Start the server
-    server_fd = initServer(argv[1], MAX_QUEUE);
-	// Listen for connections from the clients
-    waitForConnections(server_fd, &gm_data); //, &bank_data, &data_locks);
-    // Close the socket
-    close(server_fd);
+    
+    playVsPlayer( 1,1 );
+ //    // Start the server
+ //    server_fd = initServer(argv[1], MAX_QUEUE);
+ //    // Listen for connections from the clients
+ //    waitForConnections(server_fd, &gm_data); //, &bank_data, &data_locks);
+ //    // Close the socket
+ //    close(server_fd);
 
     // Clean the memory used
     shutDownGM(&gm_data);
+
 
     // Finish the main thread
     //If we do this then we should poll on threads, otherwise they can get stuck if client never leaves
     // pthread_exit(NULL); 
 
     return 0;
+}
+
+//Table is in status playing and with locked mutex
+void startGame(table_t * table){
+    int playing=0, waiting=1;
+    int connections[2];         //0->BLUE, 1->RED
+    int winner = NO_PLAYER;     //BLUE,RED,NO_PLAYER
+    int scanned,fr,fc,tr,tc,mov_id;   //FromRow,FromCol,ToRow,ToCol
+    card_t * to_use = NULL;
+
+    if(rand()%2){
+        connections[0] = table->p1_connection_fd;
+        connections[1] = table->p2_connection_fd;
+    }else{
+        connections[0] = table->p2_connection_fd;
+        connections[1] = table->p1_connection_fd;
+    }
+    //TODO: SEND players game started, and their colors
+    while(winner == NO_PLAYER){
+        print(&table->oni_board);
+        // printf("%s turn\n> ",playing==0?"BLUE":"RED");
+        //RECV fr,fc,tr,tc,mov_id <- connections[playing]
+        
+        to_use  = getCardById(mov_id);
+        //IF Valid Card
+        if (to_use != NULL) 
+        {
+            //IF movement was done
+            if(move(&table->oni_board,playing==0?BLUE:RED,to_use,fr,fc,tr,tc) == 1){
+                //SEND fr,fc,tr,tc,mov_id -> connections[waiting] //Movement done by other
+                //SEND OK                 -> connections[playing] 
+                
+                //Change Turn
+                playing=(playing+1)%2;
+                waiting=(waiting+1)%2;
+                winner = getWinner(&table->oni_board);//Check winner
+                continue;
+            }else{
+                //SEND MOVEMENT_ERROR -> connections[playing]
+            }
+        }
+        else{
+            //SEND CARD_ERROR -> connections[playing]
+        }
+    }
+    printf("Winner is %s\n",winner==0?"BLUE":"RED");
+}
+
+//Spawn proc to play for us
+void playVsPlayer(int client_fd, int difficulty){
+    //INIT BOARD
+    onitama_board_t onit;
+    initBoard(&onit);
+    //START
+    int playing=0;
+    int player = rand()%2;      //His turn, first or second
+    int winner = NO_PLAYER;     //BLUE,RED,NO_PLAYER
+    int scanned,fr,fc,tr,tc,mov_id;   //FromRow,FromCol,ToRow,ToCol
+    card_t * to_use = NULL;
+
+    //TODO: SEND players game started, and his color(turn)
+    while(winner == NO_PLAYER){
+        print(&onit);
+
+        if(playing == player){
+            //RECV fr,fc,tr,tc,mov_id <- client_fd
+            scanned = scanf("%d %d %d %d %d", &fr,&fc,&tr,&tc,&mov_id);
+            if (scanned < 5){printf("Wrong input, try again\n");while((scanned = getchar()) != EOF || scanned != '\n'){};continue;}
+
+            to_use  = getCardById(mov_id);
+            //IF Valid Card
+            if (to_use != NULL) 
+            {
+                printf("HERE\n");
+                //IF movement was done
+                if(move(&onit,player==0?BLUE:RED,to_use,fr,fc,tr,tc) == 1){
+                    //SEND OK                 -> client_fd
+                    printf("HERE2\n");
+                    //Change Turn
+                    playing=(playing+1)%2;
+                    winner = getWinner(&onit);//Check winner
+                    continue;
+                }else{
+                    //SEND MOVEMENT_ERROR -> client_fd
+                    printf("WRONG MOVEMENT\n");
+                }
+            }
+            else{
+                //SEND CARD_ERROR -> client_fd
+                printf("WRONG CARD\n");
+            }
+        }else{
+            printf("Thinking...\n");
+            //CALL PROC AND SEND ANSWER
+            //player==1?BLUE:RED NOT logic, we are the other one
+            break;
+        }
+    }
+    printf("Winner is %s\n",winner==0?"BLUE":"RED");
+    //Kill Board
+    destroyBoard(&onit);
 }
 
 ///// FUNCTION DEFINITIONS
@@ -118,6 +225,8 @@ void setupHandlers()
 */
 void initTables(gm_t * gm_data)
 {
+    initOnitama(); //TODO change seed to random
+
     //Init stats
     gm_data->total_wins = 0;
     gm_data->total_played = 0;
@@ -133,6 +242,7 @@ void initTables(gm_t * gm_data)
         gm_data->tables_array[i].p1_connection_fd = -1;
         gm_data->tables_array[i].p2_connection_fd = -1;
         pthread_mutex_init(&gm_data->tables_array[i].table_mutex, NULL);
+        initBoard(&gm_data->tables_array[i].oni_board);
     }
 }
 
@@ -222,6 +332,7 @@ void * attentionThread(void * arg)
     char buffer[BUFFER_SIZE];
     int chars_read;
     int ans,difficulty,table,t;
+    int opponent_fd,inTable;
     thread_data_t * tdt = (thread_data_t *) arg;
     int finish = 0;
     // Loop to listen for messages from the client
@@ -286,8 +397,8 @@ void * attentionThread(void * arg)
                             pthread_exit(NULL);
                             break;
                         case FREE: //Assign user to table(WHERE px_connection_id == -1)
-                            int opponent_fd = -1;
-                            int inTable = 2;
+                            opponent_fd = -1;
+                            inTable = 2;
                             if     (tt->p1_connection_fd == -1) {
                                 tt->p1_connection_fd = tdt->client_fd;
                                 opponent_fd = tt->p2_connection_fd;
@@ -371,22 +482,13 @@ table_t * getRandomTable(table_t * tables_array){
     return  &tables_array[0]; //everything is FULL, just return the first one
 }
 
-//Table is in status playing and with locked mutex
-void startGame(table_t * table){
-    printf("PLAYING\n");
-    
-}
-
-//Spawn proc to play for us
-void playVsPlayer(int client_fd, int difficulty){
-
-}
-
 void shutDownGM(gm_t * gm_data){
+    destroyOnitama();
     free(gm_data->tables_array);
 }
 
 void onCtrlC(int arg){
     interrupted = 1;
     printf("Shutting down...\n");
+    exit(1);
 }

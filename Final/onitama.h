@@ -1,7 +1,7 @@
 #ifndef ONITAMA_H
 #define ONITAMA_H
 
-typedef enum valid_tokens {EMPTY = 0, BLUE_MASTER, BLUE_STUDENT, RED_MASTER, RED_STUDENT} tokens_s;
+typedef enum valid_tokens {EMPTY_TOKEN = 0, BLUE_MASTER, BLUE_STUDENT, RED_MASTER, RED_STUDENT} tokens_s;
 typedef enum {BLUE,RED,NO_PLAYER=-1} players_s; //Blue is the gone below, movements are according to him 
 //It represents the movements within the matrix
 typedef struct movement{
@@ -29,11 +29,11 @@ void initBoard(onitama_board_t * oniBoard);
 void destroyBoard(onitama_board_t * oniBoard);
 void destroyOnitama();
 void print(onitama_board_t * oniBoard);
+card_t * getCard(char * name); //Used By Client
+card_t * getCardById(int _id); //Used By Server communication
 int canMove(onitama_board_t * oniBoard,players_s p,card_t * c,int fromRow,int fromCol,int toRow,int toCol);
 int move(onitama_board_t * oniBoard,players_s p,card_t * c,int fromRow,int fromCol,int toRow,int toCol);
 int tokenIsOfPlayer(players_s p, tokens_s tok);
 int getWinner(onitama_board_t * oniBoard);
-//For Debug
-int main();
 
 #endif  /* ONITAMA_H */
