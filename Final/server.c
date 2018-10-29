@@ -59,7 +59,7 @@ void * attentionThread(void * arg);
 void onCtrlC(int arg);
 void playVsPlayer(int client_fd, int difficulty);
 void startGame(table_t * table); //Contains clients_fd
-
+void resetTable(table_t * t);
 table_t * getRandomTable(table_t * tables_array);
 
 int interrupted = 0;
@@ -100,6 +100,10 @@ int main(int argc, char * argv[])
 
 //Table is in status playing and with locked mutex
 void startGame(table_t * table){
+    //COM
+    char buffer[BUFFER_SIZE];
+    int chars_read;
+    //GAME
     int playing=0, waiting=1;
     int connections[2];         //0->BLUE, 1->RED
     int winner = NO_PLAYER;     //BLUE,RED,NO_PLAYER
@@ -114,21 +118,66 @@ void startGame(table_t * table){
         connections[1] = table->p1_connection_fd;
     }
 
-    //TODO: SEND players game started, and their colors
+    //SEND players game started, and their colors
+    //BLUE 
+    sprintf(buffer, "%d %d", GAME_STARTED, BLUE); //BLUE = 0, RED = 1
+    if ( send(connections[0], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+    {
+        printf("Client disconnected - GAME STARTED\n");
+        resetTable(table); 
+        //TODO AVISAR AL OTRO??
+        return;
+    } 
+    bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
+    //RED
+    sprintf(buffer, "%d %d", GAME_STARTED, RED); //BLUE = 0, RED = 1
+    if ( send(connections[1], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+    {
+        printf("Client disconnected - GAME STARTED\n");
+        resetTable(table);
+        //TODO AVISAR AL OTRO??
+        return;
+    } 
+    bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
+
     while(winner == NO_PLAYER){
-        print(&table->oni_board);
+        // print(&table->oni_board);
         // printf("%s turn\n> ",playing==0?"BLUE":"RED");
         //RECV fr,fc,tr,tc,mov_id <- connections[playing]
-        
-        to_use  = getCardById(mov_id);
+        chars_read = recv(connections[playing], buffer, sizeof buffer, 0);
+        if (chars_read == 0) {
+            printf("Client disconnected - GET MOVEMENT\n");
+            resetTable(table);
+            //TODO AVISAR AL OTRO??
+            return;
+        } //RECV fr,fc,tr,tc,mov_id <- client_fd aka. Movement
+        scanned = sscanf(buffer, "%d %d %d %d %d", &fr,&fc,&tr,&tc,&mov_id);
+        bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
         //IF Valid Card
-        if (to_use != NULL) 
+        if (scanned==5 && (to_use = getCardById(mov_id))!=NULL) 
         {
             //IF movement was done
             if(move(&table->oni_board,playing==0?BLUE:RED,to_use,fr,fc,tr,tc) == 1){
                 //SEND fr,fc,tr,tc,mov_id -> connections[waiting] //Movement done by other
+                sprintf(buffer, "%d %d %d %d %d", fr,fc,tr,tc,mov_id); 
+                if ( send(connections[waiting], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+                {
+                    printf("Client disconnected - SENDING OPPONENT MOVEMENT\n");
+                    resetTable(table);
+                    return;
+                } 
+                bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
                 //SEND OK                 -> connections[playing] 
-                
+                sprintf(buffer, "%d", MOVEMENT_DONE); 
+                if ( send(connections[playing], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+                {
+                    printf("Client disconnected - WAITING MOVEMENT ANSWER\n");
+                    resetTable(table);
+                    //TODO avisar al otro?
+                    return;
+                } 
+                bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
+
                 //Change Turn
                 playing=(playing+1)%2;
                 waiting=(waiting+1)%2;
@@ -136,10 +185,29 @@ void startGame(table_t * table){
                 continue;
             }else{
                 //SEND MOVEMENT_ERROR -> connections[playing]
+                sprintf(buffer, "%d", WRONG_MOVEMENT); 
+                if ( send(connections[playing], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+                {
+                    printf("Client disconnected - WRONG CARD\n");
+                    resetTable(table);
+                    //TODO avisar al otro?
+                    return;
+                } 
+                bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
             }
         }
         else{
             //SEND CARD_ERROR -> connections[playing]
+            sprintf(buffer, "%d", WRONG_CARD); 
+            if ( send(connections[playing], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+            {
+                printf("Client disconnected - WRONG CARD\n");
+                resetTable(table);
+                //TODO avisar al otro?
+                return;
+            } 
+            bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
+            continue;
         }
     }
     printf("Winner is %s\n",winner==0?"BLUE":"RED");
@@ -575,4 +643,10 @@ void onCtrlC(int arg){
     interrupted = 1;
     printf("Shutting down...\n");
     exit(1);
+}
+
+void resetTable(table_t * t){
+    t->status = EMPTY;
+    t->p1_connection_fd = -1;
+    t->p2_connection_fd = -1;   
 }
