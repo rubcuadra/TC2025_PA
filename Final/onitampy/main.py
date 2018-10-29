@@ -1,5 +1,5 @@
-from board import OnitamaBoard
-from agent import OnitamaPlayer
+from .board import OnitamaBoard
+from .agent import OnitamaPlayer
 
 if __name__ == '__main__':
     board = OnitamaBoard()
@@ -8,6 +8,7 @@ if __name__ == '__main__':
     print(board)
     while not board.isGameOver():
         movement = op.getBestMovement(board)
+        print(movement)
         if board.canMove( op.player,*movement ):
             board = board.move(op.player,*movement) 
         else:

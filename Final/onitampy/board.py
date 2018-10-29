@@ -1,5 +1,5 @@
 from enum import Enum
-from movements import OnitamaCards
+from .movements import OnitamaCards,DECK_INDEXES
 
 class OnitamaBoard():
     """
@@ -70,7 +70,18 @@ class OnitamaBoard():
     def isPlayer(cls,player,token):
         if player is cls.BLUE: return token == cls.BLUE_MASTER or token == cls.BLUE_STUDENT
         return token == cls.RED_MASTER or token == cls.RED_STUDENT
+    
+    def setCardsById(self,arrayOfIDs): #TODO
+        self.cards = [
+                set([DECK_INDEXES[int(arrayOfIDs[0])],DECK_INDEXES[int(arrayOfIDs[1])],]), #BLUE
+                set([DECK_INDEXES[int(arrayOfIDs[2])],DECK_INDEXES[int(arrayOfIDs[3])],]), #RED
+                DECK_INDEXES[int(arrayOfIDs[4])]
+            ]
 
+    @staticmethod
+    def getCardById(cardId):
+        return DECK_INDEXES[cardId]
+    
     def canMove(self, player, fromCell, card, toCell):
         fromRow, fromCol = fromCell
         toRow,     toCol = toCell
@@ -212,13 +223,3 @@ class OnitamaBoard():
             for cell in self.board[-(i+1)]: toRet += f"{cell}|"
             toRet += "\n"
         return toRet
-
-if __name__ == '__main__':
-    from random import seed
-    seed(0)
-    board = OnitamaBoard()
-    # fromArgs = OnitamaBoard.fromArgs("rrRrr               bbBbb;FROG COBRA;CRAB RABBIT;MANTIS")
-    # print(OnitamaBoard.toArgs( board ))
-    # if board.canMove( board.RED, (0,2), "RABBIT", (1,1) ) :
-    #     newBoard = board.move( board.RED, (0,2), "RABBIT", (1,1) )
-    #     print(newBoard) 

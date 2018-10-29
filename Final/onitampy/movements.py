@@ -1,4 +1,4 @@
-from randomDict import RandomDict as RD
+from .randomDict import RandomDict as RD
 
 #Row, Column
 DR   = ( 1, 1)
@@ -36,3 +36,22 @@ OnitamaCards = RD({
     "CRAB"     : ( LL, U , RR) ,
     "DRAGON"   : ( DL, DR, LLU, RRU),
 })
+
+DECK_INDEXES = [
+    "MANTIS",
+    "OX",
+    "HORSE",
+    "EEL",
+    "CRANE",
+    "BOAR",
+    "COBRA",
+    "MONKEY",
+    "ELEPHANT",
+    "ROOSTER",
+    "GOOSE",
+    "TIGER",
+    "RABBIT",
+    "FROG",
+    "CRAB",
+    "DRAGON",
+]

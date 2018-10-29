@@ -232,9 +232,9 @@ void playVsPlayer(int client_fd, int difficulty){
     int winner = NO_PLAYER;     //BLUE,RED,NO_PLAYER
     int scanned,fr,fc,tr,tc,mov_id;   //FromRow,FromCol,ToRow,ToCol
     card_t * to_use = NULL;
-
-    //SEND players his color(turn)
-    sprintf(buffer, "%d", player); //BLUE = 0, RED = 1
+    printf("SENDING INFO\n");
+    //SEND players his color(turn) and cards
+    sprintf(buffer, "%d %d %d %d %d %d", player, onit.cards[0]->id,onit.cards[1]->id,onit.cards[2]->id,onit.cards[3]->id,onit.cards[4]->id ); //BLUE = 0, RED = 1
     if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
     {
         printf("Client disconnected - GAME STARTED\n");
@@ -242,7 +242,9 @@ void playVsPlayer(int client_fd, int difficulty){
         return;
     } 
     while(winner == NO_PLAYER){
+        print(&onit);
         if(playing == player){
+            printf("PLAYER\n");
             //Get movement from player
             chars_read = recv(client_fd, buffer, sizeof buffer, 0);
             if (chars_read == 0) {
@@ -269,7 +271,7 @@ void playVsPlayer(int client_fd, int difficulty){
             {
                 //IF movement was done
                 if(move(&onit,player==0?BLUE:RED,to_use,fr,fc,tr,tc) == 1){
-                    sprintf(buffer, "%d", MOVEMENT_DONE); 
+                    sprintf(buffer, "%d", OK); 
                     if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
                     {
                         printf("Client disconnected - WRONG CARD\n");
@@ -304,8 +306,9 @@ void playVsPlayer(int client_fd, int difficulty){
                 continue;
             }
         }else{
-            boardToParams(&onit,&boardtext);
-            sprintf( command, "%s %s \"%s\" %d %d","python","Player/agent.py",boardtext,0,2);
+            printf("COMPUTER\n");
+            boardToParams(&onit,boardtext);
+            sprintf( command, "%s %s \"%s\" %d %d","python","game_logic.py",boardtext,0,2);
             FILE *fp; 
             /* Open the command for reading. */
             fp = popen(command, "r");
@@ -314,7 +317,7 @@ void playVsPlayer(int client_fd, int difficulty){
                 return; //ERROR Decirle que al jugador que gano
             }
             fgets(answer, sizeof(answer)-1, fp); //Read Result
-            scanned = sscanf(answer, "%d %d %d %d %s", &fr,&fc,&tr,&tc,&mov_name);
+            scanned = sscanf(answer, "%d %d %d %d %s", &fr,&fc,&tr,&tc,mov_name);
             to_use  = getCard(mov_name);
             pclose(fp); /* close */
             if (scanned != 5 || to_use == NULL) 
@@ -322,9 +325,9 @@ void playVsPlayer(int client_fd, int difficulty){
                 printf("ERROR on python script, check log\n" );
                 return; //ERROR Decirle al jugador que gano
             }
-
+            printf("%s\n",answer);
             if(move(&onit,player==0?RED:BLUE,to_use,fr,fc,tr,tc) == 1){
-                sprintf(buffer, "%d %d %d %d %d", fr,fc,tr,tc,mov_id); 
+                sprintf(buffer, "%d %d %d %d %d", fr,fc,tr,tc,to_use->id); 
                 if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
                 {
                     printf("Client disconnected - BOT ANSWER\n");
@@ -564,6 +567,7 @@ void * attentionThread(void * arg)
                                 tt->p2_connection_fd = -1;
                                 tt->status = EMPTY;
                                 pthread_mutex_unlock(&tt->table_mutex);
+                                close(tdt->client_fd);    
                                 pthread_exit(NULL);
                             }
                             
@@ -599,6 +603,7 @@ void * attentionThread(void * arg)
                             }
 
                             pthread_mutex_unlock(&tt->table_mutex);
+                            close(tdt->client_fd);    
                             pthread_exit(NULL);
                             break;
                     }
@@ -617,7 +622,8 @@ void * attentionThread(void * arg)
                 sendString(tdt->client_fd, buffer);   //send it
                 break;                                //Continue
         }
-    }        
+    }    
+    close(tdt->client_fd);    
     pthread_exit(NULL); //we get here with the finish = 1 or interrupted
 }
 
