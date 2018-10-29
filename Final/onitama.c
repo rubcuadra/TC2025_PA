@@ -4,12 +4,6 @@
 #include <time.h>
 #include "onitama.h"
 
-#define BOARD_SIZE 5       //Board is 5x5
-#define NUM_CARDS  16      //16 cards in the normal deck
-#define CARD_NAME_SIZE 10  //'ELEPHANT' is the longest one
-#define VALID_MOVEMENTS 13 
-#define MAX_MOVEMENTS_PER_CARD 4
-#define CARDS_PER_BOARD 5 //2 per player + 1
 card_t     * deck;//Cards 
 movement_t * vm;  //Valid Movements
 
@@ -30,7 +24,7 @@ movement_t * vm;  //Valid Movements
 void initOnitama(){
 	//Init generators
 	time_t t; 
-	srand(0); //srand((unsigned) time(&t));
+	srand((unsigned) time(&t)); // srand(0);
 	//Movements inside the matrix used by the cards	
 	vm = malloc(NUM_CARDS * sizeof(card_t)); 
 	vm[0].x  =  1; vm[0].y  =  1; //DR  0
@@ -139,6 +133,21 @@ void initOnitama(){
 	deck[15].movements[1] = &vm[0];
 	deck[15].movements[2] = &vm[11];
 	deck[15].movements[3] = &vm[12];
+}
+
+void boardToParams(onitama_board_t * oniBoard,char * loc){
+	// " bR   B  rrb      rrb    ;MONKEY FROG;HORSE MANTIS;EEL"
+	int c = 0;
+	for (int i = 0; i < BOARD_SIZE; ++i)
+	{
+		for (int j = 0; j < BOARD_SIZE; ++j)
+		{
+			loc[c++] = oniBoard->board[i][j]+'0'; //TO ASCII VALUE
+		}
+	}
+	loc[c++] = ';';
+	//Add Cards
+	sprintf( (char *)(loc+c), "%s %s;%s %s;%s",oniBoard->cards[0]->name,oniBoard->cards[1]->name,oniBoard->cards[2]->name,oniBoard->cards[3]->name,oniBoard->cards[4]->name);
 }
 
 void initBoard(onitama_board_t * oniBoard){

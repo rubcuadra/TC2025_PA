@@ -80,13 +80,12 @@ int main(int argc, char * argv[])
     // Initialize the data structures
     initTables(&gm_data);
     
-    playVsPlayer( 1,1 );
- //    // Start the server
- //    server_fd = initServer(argv[1], MAX_QUEUE);
- //    // Listen for connections from the clients
- //    waitForConnections(server_fd, &gm_data); //, &bank_data, &data_locks);
- //    // Close the socket
- //    close(server_fd);
+    // Start the server
+    server_fd = initServer(argv[1], MAX_QUEUE);
+    // Listen for connections from the clients
+    waitForConnections(server_fd, &gm_data); //, &bank_data, &data_locks);
+    // Close the socket
+    close(server_fd);
 
     // Clean the memory used
     shutDownGM(&gm_data);
@@ -114,6 +113,7 @@ void startGame(table_t * table){
         connections[0] = table->p2_connection_fd;
         connections[1] = table->p1_connection_fd;
     }
+
     //TODO: SEND players game started, and their colors
     while(winner == NO_PLAYER){
         print(&table->oni_board);
@@ -147,6 +147,14 @@ void startGame(table_t * table){
 
 //Spawn proc to play for us
 void playVsPlayer(int client_fd, int difficulty){
+    //COM
+    char buffer[BUFFER_SIZE];
+    int chars_read;
+    //PYTHON COMM
+    char answer[BUFFER_SIZE];
+    char boardtext[70];
+    char command[140];
+    char mov_name[CARD_NAME_SIZE];
     //INIT BOARD
     onitama_board_t onit;
     initBoard(&onit);
@@ -157,41 +165,119 @@ void playVsPlayer(int client_fd, int difficulty){
     int scanned,fr,fc,tr,tc,mov_id;   //FromRow,FromCol,ToRow,ToCol
     card_t * to_use = NULL;
 
-    //TODO: SEND players game started, and his color(turn)
+    //SEND players his color(turn)
+    sprintf(buffer, "%d", player); //BLUE = 0, RED = 1
+    if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+    {
+        printf("Client disconnected - GAME STARTED\n");
+        destroyBoard(&onit);
+        return;
+    } 
     while(winner == NO_PLAYER){
-        print(&onit);
-
         if(playing == player){
-            //RECV fr,fc,tr,tc,mov_id <- client_fd
-            scanned = scanf("%d %d %d %d %d", &fr,&fc,&tr,&tc,&mov_id);
-            if (scanned < 5){printf("Wrong input, try again\n");while((scanned = getchar()) != EOF || scanned != '\n'){};continue;}
-
+            //Get movement from player
+            chars_read = recv(client_fd, buffer, sizeof buffer, 0);
+            if (chars_read == 0) {
+                printf("Client disconnected - GET MOVEMENT\n");
+                destroyBoard(&onit);
+                return;
+            } //RECV fr,fc,tr,tc,mov_id <- client_fd aka. Movement
+            scanned = sscanf(buffer, "%d %d %d %d %d", &fr,&fc,&tr,&tc,&mov_id);
+            bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
+            if (scanned < 5){ //WRONG FORMAT, TRY AGAIN
+                sprintf(buffer, "%d", WRONG_MOVEMENT); 
+                if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+                {
+                    printf("Client disconnected - WRONG FORMAT\n");
+                    destroyBoard(&onit);
+                    return;
+                } 
+                bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
+                continue;
+            }
             to_use  = getCardById(mov_id);
             //IF Valid Card
             if (to_use != NULL) 
             {
-                printf("HERE\n");
                 //IF movement was done
                 if(move(&onit,player==0?BLUE:RED,to_use,fr,fc,tr,tc) == 1){
-                    //SEND OK                 -> client_fd
-                    printf("HERE2\n");
+                    sprintf(buffer, "%d", MOVEMENT_DONE); 
+                    if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+                    {
+                        printf("Client disconnected - WRONG CARD\n");
+                        destroyBoard(&onit);
+                        return;
+                    } 
+                    bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
                     //Change Turn
                     playing=(playing+1)%2;
                     winner = getWinner(&onit);//Check winner
                     continue;
                 }else{
-                    //SEND MOVEMENT_ERROR -> client_fd
-                    printf("WRONG MOVEMENT\n");
+                    sprintf(buffer, "%d", WRONG_MOVEMENT); 
+                    if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+                    {
+                        printf("Client disconnected - WRONG MOVEMENT\n");
+                        destroyBoard(&onit);
+                        return;
+                    } 
+                    bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
                 }
             }
             else{
-                //SEND CARD_ERROR -> client_fd
-                printf("WRONG CARD\n");
+                sprintf(buffer, "%d", WRONG_CARD); 
+                if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+                {
+                    printf("Client disconnected - WRONG CARD\n");
+                    destroyBoard(&onit);
+                    return;
+                } 
+                bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
+                continue;
             }
         }else{
-            printf("Thinking...\n");
-            //CALL PROC AND SEND ANSWER
-            //player==1?BLUE:RED NOT logic, we are the other one
+            boardToParams(&onit,&boardtext);
+            sprintf( command, "%s %s \"%s\" %d %d","python","Player/agent.py",boardtext,0,2);
+            FILE *fp; 
+            /* Open the command for reading. */
+            fp = popen(command, "r");
+            if (fp == NULL) {
+                printf("Failed to run python script\n" );
+                return; //ERROR Decirle que al jugador que gano
+            }
+            fgets(answer, sizeof(answer)-1, fp); //Read Result
+            scanned = sscanf(answer, "%d %d %d %d %s", &fr,&fc,&tr,&tc,&mov_name);
+            to_use  = getCard(mov_name);
+            pclose(fp); /* close */
+            if (scanned != 5 || to_use == NULL) 
+            {
+                printf("ERROR on python script, check log\n" );
+                return; //ERROR Decirle al jugador que gano
+            }
+
+            if(move(&onit,player==0?RED:BLUE,to_use,fr,fc,tr,tc) == 1){
+                sprintf(buffer, "%d %d %d %d %d", fr,fc,tr,tc,mov_id); 
+                if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+                {
+                    printf("Client disconnected - BOT ANSWER\n");
+                    destroyBoard(&onit);
+                    return;
+                } 
+                //Clean Buffers
+                bzero(&buffer, BUFFER_SIZE);         
+                bzero(&answer, BUFFER_SIZE);          
+                bzero(&boardtext, 70);          
+                bzero(&command, 140);
+                bzero(&mov_name, CARD_NAME_SIZE); 
+                //Change Turn
+                playing=(playing+1)%2;
+                winner = getWinner(&onit);//Check winner
+                continue;
+            }
+            else{
+                printf("ERROR, WRONG MOVEMENT BY SCRIPT\n");
+                return; //ERROR
+            }
             break;
         }
     }
@@ -199,8 +285,6 @@ void playVsPlayer(int client_fd, int difficulty){
     //Kill Board
     destroyBoard(&onit);
 }
-
-///// FUNCTION DEFINITIONS
 
 /*
     Explanation to the user of the parameters required to run the program

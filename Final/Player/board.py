@@ -148,21 +148,26 @@ class OnitamaBoard():
             b.append([])
             row = int(i/5 - 1)
             for col,t in enumerate(board[p:i]):
-                if   t is OnitamaBoard.BLUE_MASTER:
+                if   t == '1':
                     extras["b"]  += 1
                     extras["mbp"] = (row,col)
                     extras["mb"]  = True
-                elif t is OnitamaBoard.RED_MASTER:
+                    b[-1].append(OnitamaBoard.BLUE_MASTER) 
+                elif t == '3':
                     extras["r"]  += 1
                     extras["mrp"] = (row,col)
                     extras["mr"]  = True
-                elif t is OnitamaBoard.BLUE_STUDENT:
+                    b[-1].append(OnitamaBoard.RED_MASTER) 
+                elif t == '2': 
                     extras["b"]  += 1
                     extras["bp"].add( (row,col) )
-                elif t is OnitamaBoard.RED_STUDENT:
+                    b[-1].append(OnitamaBoard.BLUE_STUDENT) 
+                elif t == '4':#OnitamaBoard.RED_STUDENT:
                     extras["r"]  += 1
                     extras["rp"].add( (row,col) )
-                b[-1].append(t) 
+                    b[-1].append(OnitamaBoard.RED_STUDENT)
+                else:
+                    b[-1].append(OnitamaBoard.EMPTY_CHAR)
             p = i
         cards = [
             set(blueCards.split(" ")),

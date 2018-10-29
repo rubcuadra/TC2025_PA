@@ -95,13 +95,13 @@ if __name__ == '__main__':
     from sys import argv
     #Example: 
     #   Params -                       "BOARD;cards" PLAYER LEVEL
-    #   python agent.py " bR   B  rrb      rrb    ;MONKEY FROG;HORSE MANTIS;EEL" B 2
+    #   python Player/agent.py "4434400000000000000022122;HORSE TIGER;DRAGON MANTIS;ROOSTER" 0 2
     # argv[0] => thisFile.py
     board  = OnitamaBoard.fromArgs(argv[1]) 
-    player = OnitamaBoard.BLUE if argv[2]=='B' else OnitamaBoard.RED 
+    player = OnitamaBoard.BLUE if argv[2]=='0' else OnitamaBoard.RED 
     level  = int(argv[3]) #1-3
     op = OnitamaPlayer(player,level)
     movement = op.getBestMovement(board)
     #fromRow,fromCol;MOVEMENT;toRow,toCol
-    print( f"{movement[0][0]},{movement[0][1]};{movement[1]};{movement[2][0]},{movement[2][1]}" )
+    print( f"{movement[0][0]} {movement[0][1]} {movement[2][0]} {movement[2][1]} {movement[1]}" )
 
