@@ -120,7 +120,7 @@ void startGame(table_t * table){
 
     //SEND players game started, and their colors
     //BLUE 
-    sprintf(buffer, "%d %d", GAME_STARTED, BLUE); //BLUE = 0, RED = 1
+    sprintf(buffer, "%d %d %d %d %d %d", BLUE, table->oni_board.cards[0]->id,table->oni_board.cards[1]->id,table->oni_board.cards[2]->id,table->oni_board.cards[3]->id,table->oni_board.cards[4]->id ); //BLUE = 0, RED = 1
     if ( send(connections[0], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
     {
         printf("Client disconnected - GAME STARTED\n");
@@ -130,7 +130,7 @@ void startGame(table_t * table){
     } 
     bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
     //RED
-    sprintf(buffer, "%d %d", GAME_STARTED, RED); //BLUE = 0, RED = 1
+    sprintf(buffer, "%d %d %d %d %d %d", RED, table->oni_board.cards[0]->id,table->oni_board.cards[1]->id,table->oni_board.cards[2]->id,table->oni_board.cards[3]->id,table->oni_board.cards[4]->id ); //BLUE = 0, RED = 1
     if ( send(connections[1], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
     {
         printf("Client disconnected - GAME STARTED\n");
@@ -168,7 +168,7 @@ void startGame(table_t * table){
                 } 
                 bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
                 //SEND OK                 -> connections[playing] 
-                sprintf(buffer, "%d", MOVEMENT_DONE); 
+                sprintf(buffer, "%d", OK); 
                 if ( send(connections[playing], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
                 {
                     printf("Client disconnected - WAITING MOVEMENT ANSWER\n");
