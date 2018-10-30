@@ -101,12 +101,8 @@ class Onitama_GUI():
         self.board         = board
         self.player        = player
         self.turn          = turn
+        self.is_running    = False
         self.resetMovement()
-
-        #ASK TO USER
-        self.mode          = options.PVE #PVP | PVE
-        self.difficulty    = options.DIFFICULTY_HARD
-        self.table         = -1 #-1 => RANDOM TABLE
 
     def drawBoard(self):
         for boxx in range(BOARD_SIZE): # Draws cells
@@ -165,7 +161,7 @@ class Onitama_GUI():
                         pygame.draw.rect(self.SCREEN, SELECTEDBOXCOLOR, (left, top, BOXSIZE, BOXSIZE))
                         self.valid_movs.add( (x,y) )#SAVE FOR LATER
     def getSelectedMovement(self):
-        if self.from_cell and self.selected_card and self.to_cell:
+        if self.from_cell[0]!=None and self.from_cell[1]!=None and self.selected_card!=None and self.to_cell[0]!=None and self.to_cell[1]!=None:
             return (self.from_cell,self.selected_card,self.to_cell)
         return None
     
@@ -181,7 +177,7 @@ class Onitama_GUI():
         pygame.init()
         self.SCREEN = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
         self.CLOCK  = pygame.time.Clock()
-
+        self.is_running = True
         self.done = False
         x = 30
         y = 30

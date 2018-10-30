@@ -5,6 +5,7 @@ from enum import Enum
 from threading import Thread
 from gui import Onitama_GUI
 from onitampy.board import OnitamaBoard
+from onitampy.movements import MOVEMENT_ID
 from time import sleep
 from codes import *
 
@@ -27,6 +28,36 @@ def receive(s):
     d = s.recv(1024)
     return d.decode('utf-8')[:-1] if d else None#-1 removes \0
 
+def getModeFromUser():
+    print("Select mode:\n\t1)Play Vs Player\n\t2)Play Vs Computer")
+    while True:
+        a = input("> ")
+        if a.isdigit():
+            a = int(a)
+            if a > 0 and a < 3:
+                return options.PVP if a==1 else options.PVE
+        print("Wrong option, try again")
+
+def getDifficultyFromUser():
+    print("Select difficulty:\n\t1)Normal\n\t2)Hard")
+    while True:
+        a = input("> ")
+        if a.isdigit():
+            a = int(a)
+            if a > 0 and a < 3:
+                return options.DIFFICULTY_NORMAL if a==1 else options.DIFFICULTY_HARD
+        print("Wrong option, try again")  
+
+def getTableFromUser():
+    print("Select a table id: (-1 for random table, table ids from 0 to 4) ")
+    while True:
+        a = input("> ")
+        if a.isdigit():
+            a = int(a)
+            if a == -1 or (a >= 0 and a < 5):
+                return a
+        print("Wrong option, try again")  
+
 class OnitamaClient(Thread):
     def __init__(self):
         ''' Constructor. '''
@@ -37,13 +68,11 @@ class OnitamaClient(Thread):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((HOST, PORT))
             #CONNECTION SUCCESFULL, LAUNCH WINDOW
-            START_GUI = True
-            
-            while(gui.mode == None): sleep(0.25) #Wait until player picks
-            mode = gui.mode 
+            mode = getModeFromUser()
             if mode == options.PVE: 
-                if send(s,options.PVE): 
-                    if send(s,gui.difficulty): #NORMAL
+                if send(s,mode): 
+                    difficulty = getDifficultyFromUser()
+                    if send(s,difficulty): #NORMAL
                         ans = receive(s)
                         if ans:
                             ans       = ans.split(" ")
@@ -53,19 +82,21 @@ class OnitamaClient(Thread):
                             gui.player= board.BLUE if we==0 else board.RED
                             board.setCardsById(ans[1:]) 
                             gui.board = board
+                            START_GUI = 1
+                            print("STARTING GAME...")
+                            while gui.is_running == False: sleep(0.25) #WAIT GUI
                             while not board.isGameOver():
                                 gui.turn = board.BLUE if playing==0 else board.RED
                                 if we == playing: 
                                     while True:
-                                        
                                         ans = gui.getSelectedMovement()
                                         while ans == None: 
                                             sleep(0.25)
                                             ans = gui.getSelectedMovement()
                                         gui.resetMovement()
-                                        fr,fc = ans[0]
-                                        tr,tc = ans[2]
-                                        
+                                        fr,fc  = ans[0]
+                                        mov_id = MOVEMENT_ID[ans[1]]
+                                        tr,tc  = ans[2]
                                         if board.canMove( board.BLUE if we==0 else board.RED, (fr,fc), ans[1], (tr,tc) ):
                                             if send(s,f"{fr} {fc} {tr} {tc} {mov_id}".encode()): #SEND IT
                                                 board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
@@ -78,56 +109,58 @@ class OnitamaClient(Thread):
                                     playing = (playing+1)%2
             elif mode == options.PVP:
                 while True:
-                    if send(s,options.PVP): 
-                        table = gui.table
-                        while table<-1 or table>5: 
-                            sleep(0.25)
-                            table = gui.table
-                        if table.isdigit(): 
-                            ans = int(sendAndReturn(s,table.encode())) #Num Players or ERROR (numeric)
-                            while ans == 1: #Just 1 player in table, wait until server sends us something different
-                                print(ans)
-                                ans = int(receive(s))
+                    if send(s,mode): 
+                        table = getTableFromUser()
+                        ans = int(sendAndReturn(s,table.encode())) #Num Players or ERROR (numeric)
+                        while ans == 1: #Just 1 player in table, wait until server sends us something different
+                            print(ans)
+                            ans = int(receive(s))
 
-                            if ans == 2: 
-                                # GAME STARTS
-                                ans = receive(s) #GET COLOR AND BOARD
-                                if ans:
-                                    #Initial SETUP
-                                    ans     = ans.split(" ")
-                                    we      = int(ans[0]) #0 => BLUE
-                                    playing = 0
-                                    board   = OnitamaBoard()
-                                    board.setCardsById(ans[1:]) 
-                                    #START
-                                    while not board.isGameOver():
-                                        print(board) #TODO draw instead of print
-                                        if we == playing: 
-                                            while True:
-                                                print(f"YOUR TURN: {'BLUE' if we==0 else 'RED' }")
-                                                print("Fr fc tr tc movement")
-                                                text = input("> ")
-                                                ans = text.split(" ")
-                                                if len(ans)==5: 
-                                                    fr,fc,tr,tc,mov_id = [int(c) for c in ans] #Convert to int
-                                                    print(board.getCardById(mov_id))
-                                                    if board.canMove( board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc) ):
-                                                        if send(s,f"{fr} {fc} {tr} {tc} {mov_id}".encode()): #SEND IT
-                                                            board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
-                                                            playing = (playing+1)%2
-                                                            break
-                                                print("Wrong movement,try again")    
-                                        else: #TODO si se desconecta aqui truena, debemos cachar y decir que se fue
-                                            fr,fc,tr,tc,mov_id = [int(c) for c in receive(s).split(" ")] #Convert to int
-                                            board = board.move( board.BLUE if we==1 else board.RED , (fr,fc), board.getCardById(mov_id), (tr,tc))
-                                            playing = (playing+1)%2
+                        if ans == 2: 
+                            # GAME STARTS
+                            ans = receive(s) #GET COLOR AND BOARD
+                            if ans:
+                                #Initial SETUP
+                                ans        = ans.split(" ")
+                                we         = int(ans[0]) #0 => BLUE
+                                gui.player = board.BLUE if we==0 else board.RED
+                                playing    = 0
+                                board      = OnitamaBoard()
+                                board.setCardsById(ans[1:]) 
+                                #START
+                                gui.board = board
+                                START_GUI = 1
+                                print("STARTING GAME...")
+                                while gui.is_running == False: sleep(0.25) #WAIT GUI
+                                while not board.isGameOver():
+                                    print(board) #TODO draw instead of print
 
-                                else:
-                                    raise Exception("ERROR PLAYING")
-                                
-                            else: #ERROR
-                                print(ans, "Algo salio mal")
-                        print("Wrong table, try again")
+                                    gui.turn = board.BLUE if playing==0 else board.RED
+                                    if we == playing: 
+                                        while True:
+                                            ans = gui.getSelectedMovement()
+                                            while ans == None: 
+                                                sleep(0.25)
+                                                ans = gui.getSelectedMovement()
+                                            gui.resetMovement()
+                                            fr,fc = ans[0]
+                                            mov_id= MOVEMENT_ID[ans[1]]
+                                            tr,tc = ans[2]
+                                            if board.canMove( board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc) ):
+                                                if send(s,f"{fr} {fc} {tr} {tc} {mov_id}".encode()): #SEND IT
+                                                    board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
+                                                    playing = (playing+1)%2
+                                                    break
+                                        print("Wrong movement,try again")    
+                                    else: #TODO si se desconecta aqui truena, debemos cachar y decir que se fue
+                                        fr,fc,tr,tc,mov_id = [int(c) for c in receive(s).split(" ")] #Convert to int
+                                        board = board.move( board.BLUE if we==1 else board.RED , (fr,fc), board.getCardById(mov_id), (tr,tc))
+                                        playing = (playing+1)%2
+                            else:
+                                raise Exception("ERROR PLAYING")
+                            
+                        else: #ERROR
+                            print(ans, "Algo salio mal")
             else:
                 print("WRONG OPTION, BYE")     
             s.close()

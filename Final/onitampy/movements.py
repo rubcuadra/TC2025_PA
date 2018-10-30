@@ -55,3 +55,24 @@ DECK_INDEXES = [
     "CRAB",
     "DRAGON",
 ]
+
+MOVEMENT_ID = {
+    #Adjacent
+    "MANTIS"   : 0,
+    "OX"       : 1,
+    "HORSE"    : 2,
+    "EEL"      : 3,
+    "CRANE"    : 4,
+    "BOAR"     : 5,
+    "COBRA"    : 6,
+    "MONKEY"   : 7,
+    "ELEPHANT" : 8,
+    "ROOSTER"  : 9,
+    "GOOSE"    : 10,
+    #Jumps
+    "TIGER"    : 11,
+    "RABBIT"   : 12,
+    "FROG"     : 13,
+    "CRAB"     : 14,
+    "DRAGON"   : 15,
+}
