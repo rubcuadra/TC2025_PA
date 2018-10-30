@@ -79,7 +79,7 @@ int main(int argc, char * argv[])
 	printLocalIPs();
     // Initialize the data structures
     initTables(&gm_data);
-    
+    printf("STARTING\n");
     // Start the server
     server_fd = initServer(argv[1], MAX_QUEUE);
     // Listen for connections from the clients
