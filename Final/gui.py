@@ -39,7 +39,7 @@ CARDS_IMG = {
     "ROOSTER" : pygame.image.load(os.path.join("assets/cards/ROOSTER.jpeg")),
     "TIGER"   : pygame.image.load(os.path.join("assets/cards/TIGER.jpg")),
 }
-
+CARD_WIDTH = 150
 WINDOWWIDTH = 640  # size of window's width in pixels
 WINDOWHEIGHT = 480 # size of windows' height in pixels
 FPS = 60           # frames per second, the general speed of the program
@@ -82,8 +82,10 @@ def main():
     #Onitama Logic
     selected = (None,None)
     board = OnitamaBoard()
-    player = OnitamaBoard.RED
-
+    player = OnitamaBoard.BLUE
+    print(board)
+    board[1][0] = board[0][0]
+    board[0][0] = board.EMPTY_CHAR
     #Onitama Sprites
     BLUE_MASTER_PNG.convert()
     RED_MASTER_PNG.convert()
@@ -111,7 +113,7 @@ def main():
         boxx, boxy = getBoxAtPixel(mousex, mousey)
         if boxx != None and boxy != None: # The mouse is currently over a box.
             if mouseClicked: 
-                token = board[boxy][boxx] if player == board.BLUE else board[BOARD_SIZE-boxy-1][boxx] 
+                token = board[boxy][boxx] if player == board.BLUE else board[BOARD_SIZE-boxy-1][BOARD_SIZE-boxx-1] 
                 if board.isPlayer(player,token): #CHECK IT IS OUR TOKEN
                     selected = (boxx,boxy)
 
@@ -136,17 +138,32 @@ def drawBoard(player,board,selected):
             else: #Draw normal Cell
                 pygame.draw.rect(SCREEN, BOXCOLOR, (left, top, BOXSIZE, BOXSIZE))
             
-            token = board[boxy][boxx] if player == board.BLUE else board[BOARD_SIZE-boxy-1][boxx] 
+            token = board[boxy][boxx] if player == board.BLUE else board[BOARD_SIZE-boxy-1][BOARD_SIZE-boxx-1] 
             if   token == board.BLUE_MASTER:  SCREEN.blit(BLUE_MASTER_PNG,  (left,top) )
             elif token == board.RED_MASTER:   SCREEN.blit(RED_MASTER_PNG,   (left,top) )
             elif token == board.BLUE_STUDENT: SCREEN.blit(BLUE_STUDENT_PNG, (left,top) )
             elif token == board.RED_STUDENT:  SCREEN.blit(RED_STUDENT_PNG,  (left,top) )
     
-    # if player == board.BLUE: #PRINT BLUE FOR US
-    # player_image = pg.transform.rotate(xwingImg, angle)
-    # player_rect = player_image.get_rect()
-    # player_rect.center = player_pos
-    # screen.blit(player_image, player_rect)
+    if player == board.BLUE:
+        opponentCards = board.cards[1] 
+        ourCards      = board.cards[0] 
+    else:
+        opponentCards = board.cards[0]
+        ourCards      = board.cards[1]
+    
+    #OPPONENT
+    left, top = leftTopCoordsOfBox(BOARD_SIZE, 0)
+    for i,card in enumerate(opponentCards): 
+        opponent_card = pygame.transform.rotate(CARDS_IMG[card], 180) #Rotate upside down
+        SCREEN.blit( opponent_card, (GAPSIZE+left+CARD_WIDTH*i,top) )
+    #WE
+    left, top = leftTopCoordsOfBox(BOARD_SIZE, 3)
+    for i,card in enumerate(ourCards): 
+        SCREEN.blit(  CARDS_IMG[card],  (GAPSIZE+left+CARD_WIDTH*i,top+(BOXSIZE/2)) )
+    #STAND_BY
+    left, top = leftTopCoordsOfBox(BOARD_SIZE, 2)
+    SCREEN.blit(  CARDS_IMG[board.cards[2]],  (GAPSIZE+left+(CARD_WIDTH/2),top-(BOXSIZE/4)-5) )
+
 def getBoxAtPixel(x, y):
     for boxx in range(BOARD_SIZE):
         for boxy in range(BOARD_SIZE):
