@@ -1,9 +1,9 @@
 import pygame
 from onitampy.board import OnitamaBoard
 from onitampy.movements import OnitamaCards
-from threading import Thread
-from time import sleep
+from codes import *
 import os
+
 #DO NOT TOUCH
 BOARD_SIZE = 5     # 5x5
 SCREEN = None
@@ -97,16 +97,16 @@ def getClickedCard(x,y):
     return None
 
 class Onitama_GUI():
-    def __init__(self, player=OnitamaBoard.BLUE,turn=OnitamaBoard.BLUE):
-        self.selected_cell = (None,None) #TOKEN
-        self.selected_card = None        #CARD
-        self.valid_movs    = set([])
-        self.from_cell     = (None,None)
-        self.to_cell       = (None,None) #Important for client
-        self.board         = OnitamaBoard()
+    def __init__(self, board, player=OnitamaBoard.BLUE,turn=OnitamaBoard.BLUE):
+        self.board         = board
         self.player        = player
         self.turn          = turn
-        self.OUR_CARDS     = [None,None]
+        self.resetMovement()
+
+        #ASK TO USER
+        self.mode          = options.PVE #PVP | PVE
+        self.difficulty    = options.DIFFICULTY_HARD
+        self.table         = -1 #-1 => RANDOM TABLE
 
     def drawBoard(self):
         for boxx in range(BOARD_SIZE): # Draws cells
@@ -164,7 +164,19 @@ class Onitama_GUI():
                         left, top = leftTopCoordsOfBox(x, y)
                         pygame.draw.rect(self.SCREEN, SELECTEDBOXCOLOR, (left, top, BOXSIZE, BOXSIZE))
                         self.valid_movs.add( (x,y) )#SAVE FOR LATER
-        
+    def getSelectedMovement(self):
+        if self.from_cell and self.selected_card and self.to_cell:
+            return (self.from_cell,self.selected_card,self.to_cell)
+        return None
+    
+    def resetMovement(self):
+        self.OUR_CARDS     = [None,None]
+        self.selected_cell = (None,None) #TOKEN
+        self.selected_card = None        #CARD
+        self.valid_movs    = set([])
+        self.from_cell     = (None,None)
+        self.to_cell       = (None,None) #Important for client
+
     def run(self):
         pygame.init()
         self.SCREEN = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
@@ -214,8 +226,7 @@ class Onitama_GUI():
                     elif (boxx,boxy) in self.valid_movs: #CHECK CLICK ON MOVEMENT CHOICE - DESTINATION CELL
                         self.from_cell = (self.selected_cell[1],self.selected_cell[0]) if self.player == self.board.BLUE else (BOARD_SIZE-1-self.selected_cell[1],BOARD_SIZE-1-self.selected_cell[0])
                         self.to_cell   = (boxy,boxx)   if self.player == self.board.BLUE else (BOARD_SIZE-1-boxy,BOARD_SIZE-1-boxx)
-                        print("WE MUST MOVE,",self.from_cell,self.selected_card,self.to_cell) #TODO, do the movement
-                
+
                 #CHECK CLICK ON CARDS
                 card = getClickedCard(mousex, mousey)
                 if card!=None and mouseClicked:
@@ -227,5 +238,7 @@ class Onitama_GUI():
             self.CLOCK.tick(FPS)
 
 if __name__ == '__main__':
-        gui = Onitama_GUI(player=OnitamaBoard.RED,turn=OnitamaBoard.RED)
+        board = OnitamaBoard()
+        gui = Onitama_GUI(board,player=OnitamaBoard.RED,turn=OnitamaBoard.RED)
         gui.run()
+        
