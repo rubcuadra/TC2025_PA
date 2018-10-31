@@ -83,8 +83,6 @@ class OnitamaClient(Thread):
                             board.setCardsById(ans[1:]) 
                             gui.board = board
                             START_GUI = 1
-                            print("STARTING GAME...")
-                            while gui.is_running == False: sleep(0.25) #WAIT GUI
                             while not board.isGameOver():
                                 gui.turn = board.BLUE if playing==0 else board.RED
                                 if we == playing: 
@@ -98,6 +96,7 @@ class OnitamaClient(Thread):
                                         mov_id = MOVEMENT_ID[ans[1]]
                                         tr,tc  = ans[2]
                                         if board.canMove( board.BLUE if we==0 else board.RED, (fr,fc), ans[1], (tr,tc) ):
+                                            print(ans)
                                             if send(s,f"{fr} {fc} {tr} {tc} {mov_id}".encode()): #SEND IT
                                                 board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
                                                 playing = (playing+1)%2
@@ -130,8 +129,6 @@ class OnitamaClient(Thread):
                                 #START
                                 gui.board = board
                                 START_GUI = 1
-                                print("STARTING GAME...")
-                                while gui.is_running == False: sleep(0.25) #WAIT GUI
                                 while not board.isGameOver():
                                     print(board) #TODO draw instead of print
 
@@ -142,6 +139,7 @@ class OnitamaClient(Thread):
                                             while ans == None: 
                                                 sleep(0.25)
                                                 ans = gui.getSelectedMovement()
+                                            print(ans)
                                             gui.resetMovement()
                                             fr,fc = ans[0]
                                             mov_id= MOVEMENT_ID[ans[1]]
@@ -170,6 +168,8 @@ if __name__ == '__main__':
     oc.setName('COMM Thread')
     oc.start()
     while START_GUI == 0: sleep(0.25) #Wait until COMM Thread tells us to launch it
-    if START_GUI == 1:    gui.run()   #Main Thread will be locked here
+    if START_GUI == 1:    
+        print("STARTING GUI")
+        gui.run()   #Main Thread will be locked here
     oc.join()
     

@@ -224,6 +224,7 @@ void playVsPlayer(int client_fd, int difficulty){
     char command[140];
     char mov_name[CARD_NAME_SIZE];
     //INIT BOARD
+    printf("INIT BOARD");
     onitama_board_t onit;
     initBoard(&onit);
     //START
@@ -253,6 +254,7 @@ void playVsPlayer(int client_fd, int difficulty){
                 return;
             } //RECV fr,fc,tr,tc,mov_id <- client_fd aka. Movement
             scanned = sscanf(buffer, "%d %d %d %d %d", &fr,&fc,&tr,&tc,&mov_id);
+            printf("%s\n", buffer);
             bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
             if (scanned < 5){ //WRONG FORMAT, TRY AGAIN
                 sprintf(buffer, "%d", WRONG_MOVEMENT); 
@@ -284,6 +286,7 @@ void playVsPlayer(int client_fd, int difficulty){
                     winner = getWinner(&onit);//Check winner
                     continue;
                 }else{
+                    printf("WRONG MOVEMENT\n");
                     sprintf(buffer, "%d", WRONG_MOVEMENT); 
                     if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
                     {
@@ -490,6 +493,7 @@ void * attentionThread(void * arg)
     int opponent_fd,inTable;
     thread_data_t * tdt = (thread_data_t *) arg;
     int finish = 0;
+    printf("ATTENDING\n");
     // Loop to listen for messages from the client
     while(interrupted==0 && finish==0){ 
         //Get choice from client
@@ -501,6 +505,7 @@ void * attentionThread(void * arg)
         }
         t = sscanf(buffer, "%d", &ans);       //Read choice
         bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
+        printf("SWITCH PVP OR PVE\n");
         switch(ans){
             case PVE: //VsComputer
                 sprintf(buffer, "%d", OK);           //Fine to continue
@@ -516,6 +521,7 @@ void * attentionThread(void * arg)
                 bzero(&buffer, BUFFER_SIZE);              //Clean Buffer
                 sprintf(buffer, "%d", t==1?OK:WRONG_DIFFICULTY);     //Matched option
                 sendString(tdt->client_fd, buffer);       //Return answer and continue
+                printf("STARTING playVsPlayer\n");
                 playVsPlayer(tdt->client_fd, difficulty); //Will call subproc in python
                 finish = 1;
                 break;

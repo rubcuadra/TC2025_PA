@@ -222,7 +222,7 @@ class Onitama_GUI():
                     elif (boxx,boxy) in self.valid_movs: #CHECK CLICK ON MOVEMENT CHOICE - DESTINATION CELL
                         self.from_cell = (self.selected_cell[1],self.selected_cell[0]) if self.player == self.board.BLUE else (BOARD_SIZE-1-self.selected_cell[1],BOARD_SIZE-1-self.selected_cell[0])
                         self.to_cell   = (boxy,boxx)   if self.player == self.board.BLUE else (BOARD_SIZE-1-boxy,BOARD_SIZE-1-boxx)
-
+                        print(self.getSelectedMovement())
                 #CHECK CLICK ON CARDS
                 card = getClickedCard(mousex, mousey)
                 if card!=None and mouseClicked:
@@ -235,6 +235,6 @@ class Onitama_GUI():
 
 if __name__ == '__main__':
         board = OnitamaBoard()
-        gui = Onitama_GUI(board,player=OnitamaBoard.RED,turn=OnitamaBoard.RED)
+        gui = Onitama_GUI(board,player=OnitamaBoard.BLUE,turn=OnitamaBoard.BLUE)
         gui.run()
         
