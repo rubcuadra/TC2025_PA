@@ -81,10 +81,10 @@ class OnitamaClient(Thread):
                             board = OnitamaBoard()
                             gui.player= board.BLUE if we==0 else board.RED
                             board.setCardsById(ans[1:]) 
-                            gui.board = board
                             START_GUI = 1
                             while not board.isGameOver():
-                                gui.turn = board.BLUE if playing==0 else board.RED
+                                gui.board = board
+                                gui.turn  = board.BLUE if playing==0 else board.RED
                                 if we == playing: 
                                     while True:
                                         ans = gui.getSelectedMovement()
@@ -96,7 +96,7 @@ class OnitamaClient(Thread):
                                         mov_id = MOVEMENT_ID[ans[1]]
                                         tr,tc  = ans[2]
                                         if board.canMove( board.BLUE if we==0 else board.RED, (fr,fc), ans[1], (tr,tc) ):
-                                            print(ans)
+                                            print("SENDING",f"{fr} {fc} {tr} {tc} {mov_id}")
                                             if send(s,f"{fr} {fc} {tr} {tc} {mov_id}".encode()): #SEND IT
                                                 board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
                                                 playing = (playing+1)%2
@@ -139,7 +139,6 @@ class OnitamaClient(Thread):
                                             while ans == None: 
                                                 sleep(0.25)
                                                 ans = gui.getSelectedMovement()
-                                            print(ans)
                                             gui.resetMovement()
                                             fr,fc = ans[0]
                                             mov_id= MOVEMENT_ID[ans[1]]

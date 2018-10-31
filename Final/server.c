@@ -254,7 +254,6 @@ void playVsPlayer(int client_fd, int difficulty){
                 return;
             } //RECV fr,fc,tr,tc,mov_id <- client_fd aka. Movement
             scanned = sscanf(buffer, "%d %d %d %d %d", &fr,&fc,&tr,&tc,&mov_id);
-            printf("%s\n", buffer);
             bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
             if (scanned < 5){ //WRONG FORMAT, TRY AGAIN
                 sprintf(buffer, "%d", WRONG_MOVEMENT); 
@@ -271,6 +270,7 @@ void playVsPlayer(int client_fd, int difficulty){
             //IF Valid Card
             if (to_use != NULL) 
             {
+                printf("RECV %d %d %d %d %d", fr,fc,tr,tc,mov_id)
                 //IF movement was done
                 if(move(&onit,player==0?BLUE:RED,to_use,fr,fc,tr,tc) == 1){
                     sprintf(buffer, "%d", OK); 
@@ -328,8 +328,8 @@ void playVsPlayer(int client_fd, int difficulty){
                 printf("ERROR on python script, check log\n" );
                 return; //ERROR Decirle al jugador que gano
             }
-            printf("%s\n",answer);
             if(move(&onit,player==0?RED:BLUE,to_use,fr,fc,tr,tc) == 1){
+                printf("SENDING \n");
                 sprintf(buffer, "%d %d %d %d %d", fr,fc,tr,tc,to_use->id); 
                 if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
                 {
