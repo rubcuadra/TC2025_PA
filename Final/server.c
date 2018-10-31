@@ -270,7 +270,7 @@ void playVsPlayer(int client_fd, int difficulty){
             //IF Valid Card
             if (to_use != NULL) 
             {
-                printf("RECV %d %d %d %d %d", fr,fc,tr,tc,mov_id)
+                printf("RECV %d %d %d %d %d", fr,fc,tr,tc,mov_id);
                 //IF movement was done
                 if(move(&onit,player==0?BLUE:RED,to_use,fr,fc,tr,tc) == 1){
                     sprintf(buffer, "%d", OK); 
