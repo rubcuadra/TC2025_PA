@@ -79,6 +79,11 @@ int main(int argc, char * argv[])
 	printLocalIPs();
     // Initialize the data structures
     initTables(&gm_data);
+    // gm_data.tables_array[0].oni_board.cards[0] = getCardById(5); 
+    // print(&gm_data.tables_array[0].oni_board);
+    // move(&gm_data.tables_array[0].oni_board,BLUE,getCardById(5),3,2,2,2);
+    // print(&gm_data.tables_array[0].oni_board);
+    
     printf("STARTING\n");
     // Start the server
     server_fd = initServer(argv[1], MAX_QUEUE);
@@ -87,7 +92,7 @@ int main(int argc, char * argv[])
     // Close the socket
     close(server_fd);
 
-    // Clean the memory used
+    // // Clean the memory used
     shutDownGM(&gm_data);
 
 
@@ -230,6 +235,7 @@ void playVsPlayer(int client_fd, int difficulty){
     //START
     int playing=0;
     int player = rand()%2;      //His turn, first or second
+    int us     = player==0?RED:BLUE;
     int winner = NO_PLAYER;     //BLUE,RED,NO_PLAYER
     int scanned,fr,fc,tr,tc,mov_id;   //FromRow,FromCol,ToRow,ToCol
     card_t * to_use = NULL;
@@ -312,7 +318,7 @@ void playVsPlayer(int client_fd, int difficulty){
         }else{
             printf("COMPUTER\n");
             boardToParams(&onit,boardtext);
-            sprintf( command, "%s %s \"%s\" %d %d","python","game_logic.py",boardtext,0,2);
+            sprintf( command, "%s %s \"%s\" %d %d","python","game_logic.py",boardtext,us,2);
             printf("%s\n", command);
             FILE *fp; 
             /* Open the command for reading. */
@@ -331,7 +337,7 @@ void playVsPlayer(int client_fd, int difficulty){
                 printf("ERROR on python script, check log\n" );
                 return; //ERROR Decirle al jugador que gano
             }
-            if(move(&onit,player==0?RED:BLUE,to_use,fr,fc,tr,tc) == 1){
+            if(move(&onit,us,to_use,fr,fc,tr,tc) == 1){
                 printf("SENDING \n");
                 sprintf(buffer, "%d %d %d %d %d", fr,fc,tr,tc,to_use->id); 
                 if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)

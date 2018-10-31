@@ -248,10 +248,12 @@ int canMove(onitama_board_t * oniBoard,players_s p,card_t * c,int fromRow,int fr
 		// From is player's token AND To is not players token
         if( tokenIsOfPlayer(p, oniBoard->board[fromRow][fromCol]) && tokenIsOfPlayer(p, oniBoard->board[toRow][toRow])==0 )
         {
+        	printf("USER TOKEN\n");
         	// Validate that the player has that card 
         	if ( (p==BLUE && (oniBoard->cards[0]->id==c->id || oniBoard->cards[1]->id==c->id)) || 
         	     (p==RED  && (oniBoard->cards[2]->id==c->id || oniBoard->cards[3]->id==c->id)) )
         	{ 	
+        		printf("USER CARD\n");
         		// Get movement vector
         		int movement_x = p==BLUE?toRow-fromRow:fromRow-toRow;
         		int movement_y = p==BLUE?toCol-fromCol:fromCol-toCol;
