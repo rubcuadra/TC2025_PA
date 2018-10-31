@@ -134,10 +134,9 @@ class OnitamaClient(Thread):
                                 gui.player = board.BLUE if we==0 else board.RED
                                 START_GUI = 1
                                 while not board.isGameOver():
-                                    print(board) #TODO draw instead of print
-
                                     gui.turn = board.BLUE if playing==0 else board.RED
                                     if we == playing: 
+                                        print("OUR TURN")
                                         while True:
                                             ans = gui.getSelectedMovement()
                                             while ans == None: 
@@ -154,6 +153,7 @@ class OnitamaClient(Thread):
                                                     break
                                         print("Wrong movement,try again")    
                                     else: #TODO si se desconecta aqui truena, debemos cachar y decir que se fue
+                                        print("WAIT ANSWER")
                                         fr,fc,tr,tc,mov_id = [int(c) for c in receive(s).split(" ")] #Convert to int
                                         board = board.move( board.BLUE if we==1 else board.RED , (fr,fc), board.getCardById(mov_id), (tr,tc))
                                         playing = (playing+1)%2
