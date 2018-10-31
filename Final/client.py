@@ -8,6 +8,7 @@ from onitampy.board import OnitamaBoard
 from onitampy.movements import MOVEMENT_ID
 from time import sleep
 from codes import *
+from sys import argv
 
 gui = Onitama_GUI(OnitamaBoard())
 START_GUI = 0
@@ -164,12 +165,17 @@ class OnitamaClient(Thread):
             s.close()
 
 if __name__ == '__main__':
-    oc = OnitamaClient()
-    oc.setName('COMM Thread')
-    oc.start()
-    while START_GUI == 0: sleep(0.25) #Wait until COMM Thread tells us to launch it
-    if START_GUI == 1:    
-        print("STARTING GUI")
-        gui.run()   #Main Thread will be locked here
-    oc.join()
-    
+
+    if len(argv) < 3: print("ERROR, execute as\n\t./client {host_address} {port_number}\n")
+    else:
+        HOST = argv[1]
+        PORT = int(argv[2])
+        oc = OnitamaClient()
+        oc.setName('COMM Thread')
+        oc.start()
+        while START_GUI == 0: sleep(0.25) #Wait until COMM Thread tells us to launch it
+        if START_GUI == 1:    
+            print("STARTING GUI")
+            gui.run()   #Main Thread will be locked here
+        oc.join()
+        
