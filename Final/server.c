@@ -22,7 +22,7 @@
 #include "onitama.h"
 
 #define NUM_TABLES 5
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 256
 #define MAX_QUEUE 5
 
 //Table struct
@@ -242,6 +242,7 @@ void playVsPlayer(int client_fd, int difficulty){
         destroyBoard(&onit);
         return;
     } 
+    bzero(&buffer, BUFFER_SIZE);  
     while(winner == NO_PLAYER){
         print(&onit);
         if(playing == player){
@@ -254,6 +255,7 @@ void playVsPlayer(int client_fd, int difficulty){
                 return;
             } //RECV fr,fc,tr,tc,mov_id <- client_fd aka. Movement
             scanned = sscanf(buffer, "%d %d %d %d %d", &fr,&fc,&tr,&tc,&mov_id);
+            printf("RECV %s\n",buffer);
             bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
             if (scanned < 5){ //WRONG FORMAT, TRY AGAIN
                 sprintf(buffer, "%d", WRONG_MOVEMENT); 
@@ -270,7 +272,6 @@ void playVsPlayer(int client_fd, int difficulty){
             //IF Valid Card
             if (to_use != NULL) 
             {
-                printf("RECV %d %d %d %d %d", fr,fc,tr,tc,mov_id);
                 //IF movement was done
                 if(move(&onit,player==0?BLUE:RED,to_use,fr,fc,tr,tc) == 1){
                     sprintf(buffer, "%d", OK); 
@@ -312,6 +313,7 @@ void playVsPlayer(int client_fd, int difficulty){
             printf("COMPUTER\n");
             boardToParams(&onit,boardtext);
             sprintf( command, "%s %s \"%s\" %d %d","python","game_logic.py",boardtext,0,2);
+            printf("%s\n", command);
             FILE *fp; 
             /* Open the command for reading. */
             fp = popen(command, "r");
@@ -320,6 +322,7 @@ void playVsPlayer(int client_fd, int difficulty){
                 return; //ERROR Decirle que al jugador que gano
             }
             fgets(answer, sizeof(answer)-1, fp); //Read Result
+            printf("%s\n",answer);
             scanned = sscanf(answer, "%d %d %d %d %s", &fr,&fc,&tr,&tc,mov_name);
             to_use  = getCard(mov_name);
             pclose(fp); /* close */
