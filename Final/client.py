@@ -111,25 +111,27 @@ class OnitamaClient(Thread):
             elif mode == options.PVP:
                 while True:
                     if send(s,mode): 
-                        table = getTableFromUser()
-                        ans = int(sendAndReturn(s,table.encode())) #Num Players or ERROR (numeric)
-                        while ans == 1: #Just 1 player in table, wait until server sends us something different
+                        table = str(getTableFromUser())
+                        ans = sendAndReturn(s,table.encode()) #Num Players or ERROR (numeric)
+                        while ans.isdigit() and int(ans) == 1: #Just 1 player in table, wait until server sends us something different
                             print(ans)
-                            ans = int(receive(s))
+                            ans = receive(s)
+                        print(ans)
 
-                        if ans == 2: 
+                        if (ans.isdigit() and int(ans) == 2) or (' ' in ans): 
                             # GAME STARTS
-                            ans = receive(s) #GET COLOR AND BOARD
+                            if ans.isdigit():
+                                ans = receive(s) #GET COLOR AND BOARD
                             if ans:
                                 #Initial SETUP
-                                ans        = ans.split(" ")
+                                ans        = ans.replace("\x000","").split(" ")
                                 we         = int(ans[0]) #0 => BLUE
-                                gui.player = board.BLUE if we==0 else board.RED
                                 playing    = 0
                                 board      = OnitamaBoard()
                                 board.setCardsById(ans[1:]) 
                                 #START
                                 gui.board = board
+                                gui.player = board.BLUE if we==0 else board.RED
                                 START_GUI = 1
                                 while not board.isGameOver():
                                     print(board) #TODO draw instead of print
