@@ -21,3 +21,5 @@ if __name__ == '__main__':
     # board.cards[1].add('ELEPHANT')
     # print(board.canMove( board.RED, (0,2),"ELEPHANT",(1,3)))
     # ((0, 2), , (1, 3))
+    # 
+    #python game_logic.py "4034400400000000002022102;EEL COBRA;MANTIS CRANE;MONKEY" 0 2
