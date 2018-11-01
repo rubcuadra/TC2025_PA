@@ -229,9 +229,10 @@ void playVsPlayer(int client_fd, int difficulty){
     char command[140];
     char mov_name[CARD_NAME_SIZE];
     //INIT BOARD
-    printf("INIT BOARD");
+    printf("INIT BOARD\n");
     onitama_board_t onit;
     initBoard(&onit);
+    printf("BOARD\n");
     //START
     int playing=0;
     int player = rand()%2;      //His turn, first or second
@@ -293,7 +294,7 @@ void playVsPlayer(int client_fd, int difficulty){
                     winner = getWinner(&onit);//Check winner
                     continue;
                 }else{
-                    printf("WRONG MOVEMENT\n");
+                    printf("WRONG MOVEMENT %s %s %d %d %d %d\n",player==0?"BLUE":"RED",to_use->name,fr,fc,tr,tc);
                     sprintf(buffer, "%d", WRONG_MOVEMENT); 
                     if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
                     {

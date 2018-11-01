@@ -81,11 +81,12 @@ class OnitamaClient(Thread):
                             playing   = 0
                             board = OnitamaBoard()
                             gui.player= board.BLUE if we==0 else board.RED
+                            gui.board = board
+                            gui.turn  = board.BLUE #Blue always starts
                             board.setCardsById(ans[1:]) 
                             START_GUI = 1
                             while not board.isGameOver():
-                                gui.board = board
-                                gui.turn  = board.BLUE if playing==0 else board.RED
+                                
                                 if we == playing: 
                                     while True:
                                         ans = gui.getSelectedMovement()
@@ -98,7 +99,7 @@ class OnitamaClient(Thread):
                                         tr,tc  = ans[2]
                                         if board.canMove( board.BLUE if we==0 else board.RED, (fr,fc), ans[1], (tr,tc) ):
                                             toS = f"{fr} {fc} {tr} {tc} {mov_id}".encode()
-                                            print("SENDING",toS)
+                                            print("SENDING ",toS,' - ',ans[1])
                                             if send(s,toS): #SEND IT
                                                 board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
                                                 playing = (playing+1)%2
@@ -106,8 +107,17 @@ class OnitamaClient(Thread):
                                         print("Wrong movement,try again")    
                                 else:
                                     fr,fc,tr,tc,mov_id = [int(c) for c in receive(s).split(" ")] #Convert to int
+                                    print("RECV ", fr,fc,tr,tc,mov_id,' - ',board.getCardById(mov_id))
                                     board = board.move( board.BLUE if we==1 else board.RED , (fr,fc), board.getCardById(mov_id), (tr,tc))
                                     playing = (playing+1)%2
+
+                                gui.board = board
+                                gui.turn  = board.BLUE if playing==0 else board.RED
+                            
+                            w = board.getWinner()
+                            if w:
+                                gui.winner = w
+                                print(f"Winner is {'BLUE' if w==board.BLUE else 'RED'}")
             elif mode == options.PVP:
                 while True:
                     if send(s,mode): 

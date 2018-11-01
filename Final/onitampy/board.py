@@ -147,6 +147,12 @@ class OnitamaBoard():
             return not (self._red_is_alive and self._blue_is_alive)
         return True 
 
+    def getWinner(self):
+        if self[0][2] == self.BLUE_MASTER or (self._blue_is_alive and not self._red_is_alive):
+            return self.BLUE
+        if self[4][2] == self.RED_MASTER or (not self._blue_is_alive and self._red_is_alive):
+            return self.RED
+            
     #BLUE,RED,STAND_BY = getCards()
     def getCards(self): return self.cards
     

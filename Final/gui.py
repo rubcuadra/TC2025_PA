@@ -102,6 +102,7 @@ class Onitama_GUI():
         self.player        = player
         self.turn          = turn
         self.is_running    = False
+        self.winner        = None
         self.resetMovement()
 
     def drawBoard(self):
@@ -211,8 +212,8 @@ class Onitama_GUI():
                             mousex, mousey = event.pos
                             mouseClicked = True
             
-            #We only interact if it is our turn
-            if self.turn == self.player:
+            #We only interact if it is our turn and game is not over
+            if self.turn == self.player and self.winner==None:
                 #CHECK CLICK ON CELLS
                 boxx, boxy = getBoxAtPixel(mousex, mousey)
                 if (boxx != None and boxy != None) and mouseClicked: # The mouse is currently over a box and recieved a click
@@ -227,7 +228,7 @@ class Onitama_GUI():
                 card = getClickedCard(mousex, mousey)
                 if card!=None and mouseClicked:
                     self.selected_card = self.OUR_CARDS[card]
-
+            
             pygame.display.flip()
             # will block execution until 1/60 seconds have passed 
             # since the previous time clock.tick was called.

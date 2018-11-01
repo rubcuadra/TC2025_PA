@@ -155,6 +155,7 @@ void initBoard(onitama_board_t * oniBoard){
 	oniBoard->board = malloc(BOARD_SIZE * sizeof(int*)); //Rows
     for (int c = 0 ; c < BOARD_SIZE ; ++c )       //Cols
         oniBoard->board[c] = calloc(BOARD_SIZE, sizeof(int)); 
+    printf("BOARD ALLOC");
     oniBoard->cards = malloc( CARDS_PER_BOARD*sizeof(card_t*) );
     //Set initial Tokens
     oniBoard->board[0][2] = RED_MASTER  ;
@@ -167,7 +168,7 @@ void initBoard(onitama_board_t * oniBoard){
 		oniBoard->board[4][1] = BLUE_STUDENT;
 		oniBoard->board[4][3] = BLUE_STUDENT;
 		oniBoard->board[4][4] = BLUE_STUDENT;
-	
+	printf("FILL BOARD");
 	//Set initial Cards, random without repetition
 	int ix = 0, add, new_num;
 	while (ix < CARDS_PER_BOARD){
@@ -187,7 +188,8 @@ void initBoard(onitama_board_t * oniBoard){
 			oniBoard->cards[ix] = &deck[new_num];
 			ix++;
 		}
-	}	
+	}
+	printf("RANDOM CARDS SET");
 }
 
 void destroyBoard(onitama_board_t * oniBoard){
