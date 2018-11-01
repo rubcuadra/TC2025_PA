@@ -85,7 +85,7 @@ int main(int argc, char * argv[])
     // print(&gm_data.tables_array[0].oni_board);
     // int done = move(&gm_data.tables_array[0].oni_board,BLUE,getCardById(6),3,3,3,2);
     // printf(done?"done\n":"FAIL\n");
-    print(&gm_data.tables_array[0].oni_board);
+    // print(&gm_data.tables_array[0].oni_board);
     
     printf("STARTING\n");
     // Start the server

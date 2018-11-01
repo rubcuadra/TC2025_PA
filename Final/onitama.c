@@ -157,7 +157,7 @@ void initBoard(onitama_board_t * oniBoard){
     for (int c = 0 ; c < BOARD_SIZE ; ++c )       //Cols
         oniBoard->board[c] = calloc(BOARD_SIZE, sizeof(int)); 
     printf("BOARD ALLOC\n");
-    oniBoard->cards = malloc( CARDS_PER_BOARD*sizeof(card_t*) );
+    oniBoard->cards = calloc( CARDS_PER_BOARD,sizeof(card_t*) );
     //Set initial Tokens
     oniBoard->board[0][2] = RED_MASTER  ;
 		oniBoard->board[0][0] = RED_STUDENT ;
