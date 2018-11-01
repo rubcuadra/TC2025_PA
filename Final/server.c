@@ -79,10 +79,13 @@ int main(int argc, char * argv[])
 	printLocalIPs();
     // Initialize the data structures
     initTables(&gm_data);
-    // gm_data.tables_array[0].oni_board.cards[0] = getCardById(5); 
+    // gm_data.tables_array[0].oni_board.cards[0] = getCardById(6); 
+    // gm_data.tables_array[0].oni_board.board[3][3] = BLUE_STUDENT  ;
+    // gm_data.tables_array[0].oni_board.board[4][3] = 0  ;
     // print(&gm_data.tables_array[0].oni_board);
-    // move(&gm_data.tables_array[0].oni_board,BLUE,getCardById(5),3,2,2,2);
-    // print(&gm_data.tables_array[0].oni_board);
+    // int done = move(&gm_data.tables_array[0].oni_board,BLUE,getCardById(6),3,3,3,2);
+    // printf(done?"done\n":"FAIL\n");
+    print(&gm_data.tables_array[0].oni_board);
     
     printf("STARTING\n");
     // Start the server
@@ -92,7 +95,7 @@ int main(int argc, char * argv[])
     // Close the socket
     close(server_fd);
 
-    // // Clean the memory used
+    // Clean the memory used
     shutDownGM(&gm_data);
 
 

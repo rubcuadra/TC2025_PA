@@ -251,7 +251,7 @@ int canMove(onitama_board_t * oniBoard,players_s p,card_t * c,int fromRow,int fr
 	//Cells in range
 	if (fromRow > -1 && toRow > -1 && fromCol > -1 && toCol > -1 && fromRow < BOARD_SIZE && toRow < BOARD_SIZE && fromCol < BOARD_SIZE && toCol < BOARD_SIZE){
 		// From is player's token AND To is not players token
-        if( tokenIsOfPlayer(p, oniBoard->board[fromRow][fromCol]) && tokenIsOfPlayer(p, oniBoard->board[toRow][toRow])==0 )
+        if( tokenIsOfPlayer(p, oniBoard->board[fromRow][fromCol]) && tokenIsOfPlayer(p, oniBoard->board[toRow][toCol])==0 )
         {
         	printf("USER TOKEN\n");
         	// Validate that the player has that card 
