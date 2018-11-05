@@ -36,6 +36,7 @@ void readMatrixFile(char * filePath, f_matrix * mMatrix){
     
     int firstLine = 1; //Flag for reading dimensions
     int cRow = 0, cCol = 0;      //Iterators for filling the matrix
+    mMatrix->divisor = 0.0;
     while ((read = getline(&line, &len, fp)) != -1) {
         // printf("Line Length %zu :\n", read);
         if (firstLine) {
@@ -63,7 +64,7 @@ void readMatrixFile(char * filePath, f_matrix * mMatrix){
             while (pch != NULL)
             {
                 sscanf( pch , "%f", &mMatrix->vals[cRow][cCol]); // matrix[row][column] = float( pch ) ; pch is the 'n' substring after spliting line by spaces
-                
+                mMatrix->divisor += mMatrix->vals[cRow][cCol];
                 pch = strtok (NULL, " "); //Split by space " ,.-"
                 cCol++; //Increase col index
             }
@@ -73,6 +74,8 @@ void readMatrixFile(char * filePath, f_matrix * mMatrix){
     
     fclose(fp);
     if (line) free(line);
+
+    if (mMatrix->divisor==0) mMatrix->divisor = 1.0; //and negatives??
 }
 
 void printMatrix(f_matrix* mat){
@@ -96,7 +99,7 @@ void applyFilter(ppm_t * image,f_matrix * m){
 	ppm_t temp;
 	copyImage( image, &temp);
 	printf("Size %dx%d\n", image->height,image->width);
-    
+
 #ifdef DEBUG
     clock_t t; 
     t = clock(); 
@@ -116,6 +119,7 @@ void applyFilter(ppm_t * image,f_matrix * m){
 }
 
 //Filter must be a square matrix with odd number of rows/cols
+//It applies the kernel to a pixel, it writes on dest but calculates from src
 void applyKernel(const ppm_t * src, ppm_t * dest, f_matrix * filter, int row, int col){
 	int middle = (int) filter->rows/2; //It does a floor
 
@@ -134,9 +138,9 @@ void applyKernel(const ppm_t * src, ppm_t * dest, f_matrix * filter, int row, in
 			jx = fixed_col+j;
 			if(jx<0 || jx>=src->width || ix<0 || ix>=src->height) continue; //Skip if we are out of range
 			//DO THE MAGIC
-			r += src->pixels[ix][jx].data[0]*filter->vals[i][j];
-			g += src->pixels[ix][jx].data[1]*filter->vals[i][j];
-			b += src->pixels[ix][jx].data[2]*filter->vals[i][j];
+			r += src->pixels[ix][jx].data[0]*filter->vals[i][j]/filter->divisor;
+			g += src->pixels[ix][jx].data[1]*filter->vals[i][j]/filter->divisor;
+			b += src->pixels[ix][jx].data[2]*filter->vals[i][j]/filter->divisor;
 		}
 	}
 	//Update dest

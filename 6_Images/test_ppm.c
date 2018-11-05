@@ -100,7 +100,7 @@ void parseOptions(int argc, char * argv[])
 void imageOperations(char * in_filename, char * out_filename, char * filter_filename, int doNegative, int rotationAngle, int newScale)
 { 
     ppm_t input_image = {"", 0, 0, 0, NULL}; // Create the image variables and initialize to be empty
-    f_matrix filter   = {0,0,NULL};          // Create the matrix variables and initialize to be empty
+    f_matrix filter   = {0,0,0.0,NULL};          // Create the matrix variables and initialize to be empty
 
     // Load the image into the program
     readImageFile(in_filename, &input_image);

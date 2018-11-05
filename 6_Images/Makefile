@@ -1,6 +1,6 @@
 # Simple example of a Makefile
-INPUT  = "assets/ppms/ninja300.ppm"
-OUTPUT = "assets/ppms/ninja300_edge_detect.ppm"
+INPUT  = "assets/ppms/ninja.ppm"
+OUTPUT = "assets/ppms/ninja2.ppm"
 MATRIX = "assets/filters/edge_detect.txt" #blur down sharpen
 ### Variables for this project ###
 # These should be the only ones that need to be modified
@@ -14,9 +14,9 @@ MAIN = test_ppm
 ### Variables for the compilation rules ###
 # These should work for most projects, but can be modified when necessary
 # The compiler program to use
-CC = gcc#/usr/local/bin/gcc-8
+CC = /usr/local/bin/gcc-8
 # Options to use when compiling object files
-CFLAGS = -Wall -g -std=c99 -pedantic -lpthread -fopenmp -D DEBUG
+CFLAGS = -Wall -g -std=c99 -pedantic -lpthread -fopenmp #-D DEBUG
 # Options to use for the final linking process
 # This one links the math library
 LDFLAGS = -lm

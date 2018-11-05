@@ -6,6 +6,7 @@
 typedef struct filter_matrix{
     int rows;
     int cols;
+    float divisor;
     float **vals;
 } f_matrix;
 
