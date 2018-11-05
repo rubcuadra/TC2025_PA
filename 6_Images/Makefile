@@ -14,7 +14,7 @@ MAIN = test_ppm
 ### Variables for the compilation rules ###
 # These should work for most projects, but can be modified when necessary
 # The compiler program to use
-CC = /usr/local/bin/gcc-8
+CC = gcc#/usr/local/bin/gcc-8
 # Options to use when compiling object files
 CFLAGS = -Wall -g -std=c99 -pedantic -lpthread -fopenmp -D DEBUG
 # Options to use for the final linking process
