@@ -102,17 +102,10 @@ void applyFilter(ppm_t * image,f_matrix * m){
     t = clock(); 
 #endif
     
-	#pragma omp parallel default(none) shared(temp, image, m)
-	{
-		#pragma omp for
-		for (int i = 0; i < image->height; ++i)
-		{
-			for (int j = 0; j < image->width; ++j)
-			{		
-				applyKernel( &temp, image, m, i,j ); //Should be parallelized	
-			}
-		} 
-	}
+    #pragma omp parallel for default(none) shared(temp, image, m) collapse(2)
+	for (int i = 0; i < image->height; ++i)
+		for (int j = 0; j < image->width; ++j)
+			applyKernel( &temp, image, m, i,j ); 
 
 #ifdef DEBUG
     t = clock() - t; 
