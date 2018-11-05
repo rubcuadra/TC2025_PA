@@ -16,7 +16,7 @@ MAIN = test_ppm
 # The compiler program to use
 CC = gcc
 # Options to use when compiling object files
-CFLAGS = -Wall -g -std=c99 -pedantic -lpthread #-fopenmp #-D DEBUG
+CFLAGS = -Wall -g -std=c99 -pedantic -lpthread -fopenmp -D DEBUG
 # Options to use for the final linking process
 # This one links the math library
 LDFLAGS = -lm
@@ -29,7 +29,7 @@ all: $(MAIN)
 
 # Rule to make the executable
 $(MAIN): $(OBJECTS)
-	$(CC) $^ -o $@ $(LDFLAGS)
+	$(CC) $^ -o $@ $(LDFLAGS) -fopenmp
 
 # Rule to make the object files
 %.o: %.c $(DEPENDS)

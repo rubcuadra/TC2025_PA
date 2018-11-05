@@ -1,12 +1,15 @@
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <omp.h>
 #include <string.h>
+#include <sys/types.h>
+#include <time.h>
 #include "filters.h"
 
-//rows and cols should exist before calling this
+//rows and cols should exist before calling
 void allocateMatrixMemory(f_matrix * mRes){
 	mRes->vals = calloc(mRes->rows, sizeof(float*)); //Rows
     for (int c = 0 ; c < mRes->rows ; ++c )
@@ -84,17 +87,22 @@ void printMatrix(f_matrix* mat){
 
 void applyFilter(ppm_t * image,f_matrix * m){
 	//Assert matrix is a square matrix with odd rows/cols
-	if (m->rows != m->cols || m->rows%2==0)
+	if (m->rows != m->cols || m->rows%2==0 || m->rows <= 1)
 	{
-		printf("Filter must be a square matrix with odd number of roows/cols\n");
+		printf("Filter must be a square matrix with odd number of rows/cols (>1)\n");
 		return;
 	}
 	//Create a copy of the image
 	ppm_t temp;
 	copyImage( image, &temp);
 	printf("Size %dx%d\n", image->height,image->width);
-
-	#pragma omp parallel default(none) shared(temp, image) private(none) 
+    
+#ifdef DEBUG
+    clock_t t; 
+    t = clock(); 
+#endif
+    
+	#pragma omp parallel default(none) shared(temp, image, m)
 	{
 		#pragma omp for
 		for (int i = 0; i < image->height; ++i)
@@ -105,6 +113,12 @@ void applyFilter(ppm_t * image,f_matrix * m){
 			}
 		} 
 	}
+
+#ifdef DEBUG
+    t = clock() - t; 
+    printf("It took %f seconds",((double)t)/CLOCKS_PER_SEC);
+#endif
+
 	freeMemory(&temp);
 }
 
