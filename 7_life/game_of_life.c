@@ -22,6 +22,7 @@
 #define COLOR_MULTIPLIER 255 
 #define IMAGES_DIRECTORY "Images/"
 #define STRING_SIZE 50
+#define NUM_THREADS 8 
 
 ///// Function declarations /////
 void usage(const char * program);
@@ -83,9 +84,13 @@ void lifeSimulation(int iterations, char * start_file)
     allocateMatrixMemory( nextGeneration);
     preparePGMImage( currentGeneration, &generationPicture );
     
+    //Multithread without OMP
+    data_t * threads_data = malloc( (NUM_THREADS+1) * sizeof (data_t));;
+    generateThreadsData(threads_data , NUM_THREADS, currentGeneration, nextGeneration);
+    
     #ifdef DEBUG
-    clock_t t; 
-    t = clock(); 
+        clock_t t; 
+        t = clock(); 
     #endif
 
     //Generate LIFE
@@ -93,17 +98,22 @@ void lifeSimulation(int iterations, char * start_file)
     {
         // generateLife( currentGeneration, nextGeneration);
         // OMPgenerateLife( currentGeneration, nextGeneration );
-        MTgenerateLife( currentGeneration, nextGeneration );
+        //MT
+        MTgenerateLife( currentGeneration, nextGeneration, threads_data, NUM_THREADS );
 
         saveAsPGM( nextGeneration, &generationPicture, i);
+        //Update gens
         temp = currentGeneration;          //For switching
         currentGeneration = nextGeneration;//Save Generation
         nextGeneration    = temp;          //nextGen will be overwritten
+        
+        //MT
+        setGenerations(threads_data , NUM_THREADS, currentGeneration, nextGeneration);
     }
 
     #ifdef DEBUG
-    t = clock() - t; 
-    printf("It took %f seconds",((double)t)/CLOCKS_PER_SEC);
+        t = clock() - t; 
+        printf("It took %f seconds",((double)t)/CLOCKS_PER_SEC);
     #endif
     
     //Free space
@@ -112,6 +122,8 @@ void lifeSimulation(int iterations, char * start_file)
     freeMatrixMemory(nextGeneration);
     free(currentGeneration);
     free(nextGeneration);
+    //MT
+    free(threads_data);
 }
 
 // Get the memory necessary to store an image

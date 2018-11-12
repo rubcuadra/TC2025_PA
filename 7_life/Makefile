@@ -1,5 +1,5 @@
 # Makefile to compile a complex program composed of many libraries
-ITERATIONS = 10
+ITERATIONS = 20
 INITIAL_BOARD = "Boards/bichitos.txt"
 ### Variables for this project ###
 # These should be the only ones that need to be modified
