@@ -24,10 +24,68 @@ void OMPgenerateLife(const matrix_t * currentGeneration, matrix_t * nextGenerati
 			reproduce(currentGeneration,nextGeneration,i,j);
 }
 
+// void generateThreadsData(data_t * thread_data,int numThreads, matrix_t * currentGeneration){
+// 	thread_data = malloc();
+	
+// 	//Split by area
+// 	int area = currentGeneration->rows * currentGeneration->cols;
+// 	int blockArea = area/NUM_THREADS;
+// 	int side = floor(sqrt(blockArea)) ; //Sqr root
+// 	//Prepare divisions for load balancing
+// 	// int width_step  = currentGeneration->width >side?side:currentGeneration->width;
+// 	// int height_step = currentGeneration->height>side?side:currentGeneration->height;
+// 	int current_row = 0, current_col = 0;
+// 	int row_end = 0;
+// 	// Launch the threads
+//     for (int i=0; i<NUM_THREADS; i++)
+//     {
+//         // Create an instance of the structure to pass
+//         thread_data = malloc(sizeof (data_t));
+//         //Set pointers for boards
+//         thread_data->currentGeneration = currentGeneration;
+//         thread_data->nextGeneration    = nextGeneration;
+        
+//         thread_data->from_row = current_row;
+//         thread_data->from_col = current_col;
+
+//         //Get TO
+//         if ( current_row+side < currentGeneration->rows ){
+//         	thread_data->to_row = current_row+side;
+//         	current_row = thread_data->to_row;
+//         }
+//         else{
+//         	thread_data->to_row = currentGeneration->rows; //Remaining
+//         	current_row = 0;     //Return to left
+//         	row_end = 1;         //For moving cols
+//         }
+        
+//         thread_data->to_col   = current_col+side<currentGeneration->cols?current_col+side:currentGeneration->cols;
+//         if (row_end == 1){
+//         	current_col = thread_data->to_col; //CHECK THIS
+//         	row_end = 0;
+//         }
+//         // printf("Thread %d, (%d,%d) (%d,%d)\n", i, thread_data->from_row,thread_data->from_col,thread_data->to_row,thread_data->to_col);
+// 		//Data ready, create threads
+// 		pthread_create(&tid[i], NULL, reproduceBlock, (void *)thread_data);		        	
+//     }
+//     //Last block
+//     thread_data = malloc(sizeof (data_t));
+//     //Set pointers for boards
+//     thread_data->currentGeneration = currentGeneration;
+//     thread_data->nextGeneration    = nextGeneration;
+//     thread_data->from_row = current_row;
+//     thread_data->from_col = current_col;
+//     thread_data->to_row   = currentGeneration->rows;
+//     thread_data->to_col   = currentGeneration->cols;
+//     pthread_create(&tid[NUM_THREADS], NULL, reproduceBlock, (void *)thread_data);		        	
+//     // Wait for the threads to finish
+//     for (int i=0; i<=NUM_THREADS; i++) pthread_join(tid[i], NULL);  
+// }
+
 //Normal Threads
 void MTgenerateLife(const matrix_t * currentGeneration, matrix_t * nextGeneration){
 	
-	pthread_t tid[NUM_THREADS];
+	pthread_t tid[NUM_THREADS+1];
 	data_t * thread_data = NULL;
 	
 	//Split by area
@@ -57,12 +115,12 @@ void MTgenerateLife(const matrix_t * currentGeneration, matrix_t * nextGeneratio
         	current_row = thread_data->to_row;
         }
         else{
-        	thread_data->to_row = currentGeneration->rows - 1; //Remaining
+        	thread_data->to_row = currentGeneration->rows; //Remaining
         	current_row = 0;     //Return to left
         	row_end = 1;         //For moving cols
         }
         
-        thread_data->to_col   = current_col+side<currentGeneration->cols?current_col+side:currentGeneration->cols-1;
+        thread_data->to_col   = current_col+side<currentGeneration->cols?current_col+side:currentGeneration->cols;
         if (row_end == 1){
         	current_col = thread_data->to_col; //CHECK THIS
         	row_end = 0;
@@ -71,9 +129,18 @@ void MTgenerateLife(const matrix_t * currentGeneration, matrix_t * nextGeneratio
 		//Data ready, create threads
 		pthread_create(&tid[i], NULL, reproduceBlock, (void *)thread_data);		        	
     }
-
+    //Last block
+    thread_data = malloc(sizeof (data_t));
+    //Set pointers for boards
+    thread_data->currentGeneration = currentGeneration;
+    thread_data->nextGeneration    = nextGeneration;
+    thread_data->from_row = current_row;
+    thread_data->from_col = current_col;
+    thread_data->to_row   = currentGeneration->rows;
+    thread_data->to_col   = currentGeneration->cols;
+    pthread_create(&tid[NUM_THREADS], NULL, reproduceBlock, (void *)thread_data);		        	
     // Wait for the threads to finish
-    for (int i=0; i<NUM_THREADS; i++) pthread_join(tid[i], NULL);    
+    for (int i=0; i<=NUM_THREADS; i++) pthread_join(tid[i], NULL);    
 }
 
 //A thread runs this
