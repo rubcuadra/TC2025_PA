@@ -150,7 +150,7 @@ class OnitamaClient(Thread):
                                         while True:
                                             ans = gui.getSelectedMovement()
                                             while ans == None: 
-                                                sleep(0.25)
+                                                sleep(0.1)
                                                 ans = gui.getSelectedMovement()
                                             gui.resetMovement()
                                             fr,fc = ans[0]

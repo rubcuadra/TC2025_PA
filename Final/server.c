@@ -167,6 +167,8 @@ void startGame(table_t * table){
         {   
             //IF movement was done
             if(move(&table->oni_board,playing==0?BLUE:RED,to_use,fr,fc,tr,tc) == 1){
+                //WAIT, CLIENT IS DOING THE MOVEMENT
+                printf("MOVEMENT DONE, SENDING MOVEMENT TO WAITING PLAYER\n");
                 //SEND fr,fc,tr,tc,mov_id -> connections[waiting] //Movement done by other
                 sprintf(buffer, "%d %d %d %d %d", fr,fc,tr,tc,mov_id); 
                 if ( send(connections[waiting], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
@@ -177,6 +179,7 @@ void startGame(table_t * table){
                 } 
                 bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
                 //SEND OK                 -> connections[playing] 
+                printf("MOVEMENT DONE, SENDING OK TO PLAYER THAT PlAYED\n");
                 sprintf(buffer, "%d", OK); 
                 if ( send(connections[playing], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
                 {
@@ -194,7 +197,7 @@ void startGame(table_t * table){
                 continue;
             }else{
                 //SEND MOVEMENT_ERROR -> connections[playing]
-                printf("ERROR TRYING TO MOVE %d %d %d %d %d\n", fr,fc,tr,tc,mov_id);
+                printf("PLAYER %s SCANNED %d: ERROR TRYING TO MOVE %d %d %d %d %s\n", playing==0?"BLUE":"RED" ,scanned,fr,fc,tr,tc, getCardById(mov_id)->name);
                 sprintf(buffer, "%d", WRONG_MOVEMENT); 
                 if ( send(connections[playing], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
                 {
