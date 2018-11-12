@@ -20,8 +20,11 @@ YELLOW   = (255, 255,   0)
 ORANGE   = (255, 128,   0)
 PURPLE   = (255,   0, 255)
 CYAN     = (  0, 255, 255)
+CREAM    = (223, 216, 201) 
+DARKGRAY = (101,  97,  87)
 CUSTOM   = (197, 189, 186)
 
+HEADER_PNG       = pygame.image.load(os.path.join("assets/header.png"))
 BLUE_MASTER_PNG  = pygame.image.load(os.path.join("assets/blue_master.png"))
 RED_MASTER_PNG   = pygame.image.load(os.path.join("assets/red_master.png"))
 BLUE_STUDENT_PNG = pygame.image.load(os.path.join("assets/blue_student.png"))
@@ -47,16 +50,16 @@ CARDS_IMG = {
 CARD_WIDTH  = 150
 CARD_HEIGHT = 73 
 WINDOWWIDTH = 640  # size of window's width in pixels
-WINDOWHEIGHT= 480 # size of windows' height in pixels
+WINDOWHEIGHT= 480  # size of windows' height in pixels
 FPS = 60           # frames per second, the general speed of the program
 BOXSIZE = 40       # size of box height & width in pixels
 GAPSIZE = 10       # size of gap between boxes in pixels
 BOARDWIDTH = 10    # number of columns of icons
 BOARDHEIGHT = 7    # number of rows of icons
 XMARGIN = int((WINDOWWIDTH - (BOARDWIDTH * (BOXSIZE + GAPSIZE))) / 2)
-YMARGIN = int((WINDOWHEIGHT - (BOARDHEIGHT * (BOXSIZE + GAPSIZE))) / 2)
+YMARGIN = int((WINDOWHEIGHT - (BOARDHEIGHT * (BOXSIZE + GAPSIZE))) / 2) + 40
 
-BGCOLOR          = NAVYBLUE
+BGCOLOR          = CREAM
 BOXCOLOR         = WHITE
 SELECTEDBOXCOLOR = YELLOW
 HIGHLIGHTCOLOR   = YELLOW
@@ -173,6 +176,19 @@ class Onitama_GUI():
         self.valid_movs    = set([])
         self.from_cell     = (None,None)
         self.to_cell       = (None,None) #Important for client
+    
+    def drawText(self):
+        #HEADER
+        self.SCREEN.blit(  HEADER_PNG,  (0,0) )
+        #TURNS
+        left,top = leftTopCoordsOfBox(0,BOARD_SIZE)
+        text = None
+        if self.winner != None: #GameOver
+            text = self.winnerIsBlueText if self.winner == self.board.BLUE else self.winnerIsRedText
+        else:
+            if self.player == self.turn: text = self.ourTurnText
+            else:                        text = self.opponentTurnText
+        self.SCREEN.blit(text,(left,top))
 
     def run(self):
         pygame.init()
@@ -191,10 +207,18 @@ class Onitama_GUI():
         RED_MASTER_PNG.convert()
         BLUE_STUDENT_PNG.convert()
         RED_STUDENT_PNG.convert()
+        HEADER_PNG.convert()
         for c in self.board.cards[0]: CARDS_IMG[c].convert()
         for c in self.board.cards[1]: CARDS_IMG[c].convert()
         CARDS_IMG[self.board.cards[2]].convert()
-        
+        #TEXT
+        pygame.font.init()
+        self.font   = pygame.font.SysFont('Comic Sans MS', 30)
+        self.ourTurnText      = self.font.render('Your Turn', False, BLACK)
+        self.opponentTurnText = self.font.render("Waiting for opponent to move ", False, BLACK)
+        self.winnerIsBlueText = self.font.render("GAME OVER, THE WINNER IS BLUE ", False, BLACK)
+        self.winnerIsRedText  = self.font.render("GAME OVER, THE WINNER IS RED ", False, BLACK)
+
         while not self.done:
             mouseClicked = False
             self.SCREEN.fill(BGCOLOR) # drawing the window
@@ -202,6 +226,7 @@ class Onitama_GUI():
             self.drawBoard()
             self.drawCards()
             self.drawMovements()
+            self.drawText()
 
             for event in pygame.event.get(): # event handling loop
                     if event.type == pygame.QUIT or (event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE):
