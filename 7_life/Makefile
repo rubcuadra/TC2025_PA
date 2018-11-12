@@ -14,7 +14,7 @@ MAIN = game_of_life
 ### Variables for the compilation rules ###
 # These should work for most projects, but can be modified when necessary
 # The compiler program to use
-CC = gcc-8
+CC = gcc#-8
 # Options to use when compiling object files
 CFLAGS = -Wall -g -std=c99 -pedantic -fopenmp -D DEBUG -D $(TYPE)# -O2
 # Options to use for the final linking process
