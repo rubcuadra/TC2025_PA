@@ -188,7 +188,7 @@ class Onitama_GUI():
         else:
             if self.player == self.turn: text = self.ourTurnText
             else:                        text = self.opponentTurnText
-        self.SCREEN.blit(text,(left,top))
+        self.SCREEN.blit(text,(left,top+GAPSIZE))
 
     def run(self):
         pygame.init()
