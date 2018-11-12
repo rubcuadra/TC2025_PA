@@ -124,15 +124,15 @@ class OnitamaClient(Thread):
                         table = str(getTableFromUser())
                         ans = sendAndReturn(s,table.encode()) #Num Players or ERROR (numeric)
                         while ans.isdigit() and int(ans) == 1: #Just 1 player in table, wait until server sends us something different
-                            print(ans)
+                            print(f"Waiting for a player to join table {table}")
                             ans = receive(s)
-                        print(ans)
 
                         if (ans.isdigit() and int(ans) == 2) or (' ' in ans): 
                             # GAME STARTS
-                            if ans.isdigit():
+                            if ans.isdigit(): #We got number players
                                 ans = receive(s) #GET COLOR AND BOARD
-                            if ans:
+                                print("GOT SETUP ",ans)
+                            if ans: #We got setup
                                 #Initial SETUP
                                 ans        = ans.replace("\x000","").split(" ")
                                 we         = int(ans[0]) #0 => BLUE
@@ -146,7 +146,7 @@ class OnitamaClient(Thread):
                                 while not board.isGameOver():
                                     gui.turn = board.BLUE if playing==0 else board.RED
                                     if we == playing: 
-                                        print("OUR TURN")
+                                        print("WE MOVE")
                                         while True:
                                             ans = gui.getSelectedMovement()
                                             while ans == None: 
@@ -161,12 +161,22 @@ class OnitamaClient(Thread):
                                                     board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
                                                     playing = (playing+1)%2
                                                     break
-                                        print("Wrong movement,try again")    
+                                                else:
+                                                    print("Server error, can't move")  
+                                            else:
+                                                print("Local error, can't move")  
                                     else: #TODO si se desconecta aqui truena, debemos cachar y decir que se fue
-                                        print("WAIT ANSWER")
+                                        print("WE WAIT")
                                         fr,fc,tr,tc,mov_id = [int(c) for c in receive(s).split(" ")] #Convert to int
+                                        print('got',fr,fc,tr,tc,mov_id)
                                         board = board.move( board.BLUE if we==1 else board.RED , (fr,fc), board.getCardById(mov_id), (tr,tc))
                                         playing = (playing+1)%2
+                                    gui.board = board
+                                w = board.getWinner()
+                                if w:
+                                    gui.winner = w
+                                    print(f"Winner is {'BLUE' if w==board.BLUE else 'RED'}")
+                                    break
                             else:
                                 raise Exception("ERROR PLAYING")
                             
@@ -187,7 +197,7 @@ if __name__ == '__main__':
         oc.start()
         while START_GUI == 0: sleep(0.25) #Wait until COMM Thread tells us to launch it
         if START_GUI == 1:    
-            print("STARTING GUI")
+            # print("STARTING GUI")
             gui.run()   #Main Thread will be locked here
         oc.join()
         

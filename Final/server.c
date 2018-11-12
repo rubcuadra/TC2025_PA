@@ -79,11 +79,12 @@ int main(int argc, char * argv[])
 	printLocalIPs();
     // Initialize the data structures
     initTables(&gm_data);
-    // gm_data.tables_array[0].oni_board.cards[0] = getCardById(6); 
+
+    // gm_data.tables_array[0].oni_board.cards[0] = getCardById(7); 
     // gm_data.tables_array[0].oni_board.board[3][3] = BLUE_STUDENT  ;
     // gm_data.tables_array[0].oni_board.board[4][3] = 0  ;
     // print(&gm_data.tables_array[0].oni_board);
-    // int done = move(&gm_data.tables_array[0].oni_board,BLUE,getCardById(6),3,3,3,2);
+    // int done = move(&gm_data.tables_array[0].oni_board,BLUE,getCardById(7),4,2,3,1);
     // printf(done?"done\n":"FAIL\n");
     // print(&gm_data.tables_array[0].oni_board);
     
@@ -163,7 +164,7 @@ void startGame(table_t * table){
         bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
         //IF Valid Card
         if (scanned==5 && (to_use = getCardById(mov_id))!=NULL) 
-        {
+        {   
             //IF movement was done
             if(move(&table->oni_board,playing==0?BLUE:RED,to_use,fr,fc,tr,tc) == 1){
                 //SEND fr,fc,tr,tc,mov_id -> connections[waiting] //Movement done by other
@@ -193,6 +194,7 @@ void startGame(table_t * table){
                 continue;
             }else{
                 //SEND MOVEMENT_ERROR -> connections[playing]
+                printf("ERROR TRYING TO MOVE %d %d %d %d %d\n", fr,fc,tr,tc,mov_id);
                 sprintf(buffer, "%d", WRONG_MOVEMENT); 
                 if ( send(connections[playing], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
                 {
@@ -591,6 +593,7 @@ void * attentionThread(void * arg)
                             }
                             
                             //CHECK opponent is still connected
+                            bzero(&buffer, BUFFER_SIZE);    //Clean Buffer
                             sprintf(buffer, "%d", inTable); //Send number of users in table to OPPONENT that was waiting
                             if ( send( opponent_fd, buffer, strlen(buffer)+1, 0) == -1 ) 
                             {   //IF it fails then the player that was waiting is gone, remove him
@@ -627,16 +630,19 @@ void * attentionThread(void * arg)
                             break;
                     }
                 }else{
+                    bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
                     sprintf(buffer, "%d", WRONG_TABLE);   //Matched option
                     sendString(tdt->client_fd, buffer);   //Return answer and continue    
                 }
                 break;
             case EXIT:
+                bzero(&buffer, BUFFER_SIZE);         //Clean Buffer
                 sprintf(buffer, "%d", BYE);           //Prepare BYE
                 sendString(tdt->client_fd, buffer);   //send it
                 finish = 1;                           //BYE
                 break;
             default:
+                bzero(&buffer, BUFFER_SIZE);         //Clean Buffer
                 sprintf(buffer, "%d", ERROR);         //prepare ERROR
                 sendString(tdt->client_fd, buffer);   //send it
                 break;                                //Continue
