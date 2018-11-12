@@ -167,6 +167,7 @@ void startGame(table_t * table){
         {   
             //IF movement was done
             if(move(&table->oni_board,playing==0?BLUE:RED,to_use,fr,fc,tr,tc) == 1){
+                usleep(50000); //Delay, es mas rapido aqui que el del cliente
                 //WAIT, CLIENT IS DOING THE MOVEMENT
                 printf("MOVEMENT DONE, SENDING MOVEMENT TO WAITING PLAYER\n");
                 //SEND fr,fc,tr,tc,mov_id -> connections[waiting] //Movement done by other
