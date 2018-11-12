@@ -85,9 +85,11 @@ void lifeSimulation(int iterations, char * start_file)
     preparePGMImage( currentGeneration, &generationPicture );
     
     //Multithread without OMP
-    data_t * threads_data = malloc( (NUM_THREADS+1) * sizeof (data_t));;
-    generateThreadsData(threads_data , NUM_THREADS, currentGeneration, nextGeneration);
-    
+    #ifdef PARALLEL
+        data_t * threads_data = malloc( (NUM_THREADS+1) * sizeof (data_t));;
+        generateThreadsData(threads_data , NUM_THREADS, currentGeneration, nextGeneration);
+    #endif
+
     #ifdef DEBUG
         clock_t t; 
         t = clock(); 
@@ -96,10 +98,15 @@ void lifeSimulation(int iterations, char * start_file)
     //Generate LIFE
     for (int i = 0; i < iterations; ++i)
     {
-        // generateLife( currentGeneration, nextGeneration);
-        // OMPgenerateLife( currentGeneration, nextGeneration );
-        //MT
-        MTgenerateLife( currentGeneration, nextGeneration, threads_data, NUM_THREADS );
+        #ifdef LINEAL
+            generateLife( currentGeneration, nextGeneration);
+        #endif
+        #ifdef OMPT
+            OMPgenerateLife( currentGeneration, nextGeneration );
+        #endif
+        #ifdef PARALLEL
+            MTgenerateLife( currentGeneration, nextGeneration, threads_data, NUM_THREADS );
+        #endif
 
         saveAsPGM( nextGeneration, &generationPicture, i);
         //Update gens
@@ -107,8 +114,9 @@ void lifeSimulation(int iterations, char * start_file)
         currentGeneration = nextGeneration;//Save Generation
         nextGeneration    = temp;          //nextGen will be overwritten
         
-        //MT
-        setGenerations(threads_data , NUM_THREADS, currentGeneration, nextGeneration);
+        #ifdef PARALLEL
+            setGenerations(threads_data , NUM_THREADS, currentGeneration, nextGeneration);
+        #endif 
     }
 
     #ifdef DEBUG
@@ -122,8 +130,9 @@ void lifeSimulation(int iterations, char * start_file)
     freeMatrixMemory(nextGeneration);
     free(currentGeneration);
     free(nextGeneration);
-    //MT
-    free(threads_data);
+    #ifdef PARALLEL
+        free(threads_data);
+    #endif 
 }
 
 // Get the memory necessary to store an image

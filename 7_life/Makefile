@@ -1,5 +1,6 @@
 # Makefile to compile a complex program composed of many libraries
-ITERATIONS = 20
+TYPE = LINEAL #possible options: OMPT, PARALLEL, LINEAL
+ITERATIONS = 50
 INITIAL_BOARD = "Boards/bichitos.txt"
 ### Variables for this project ###
 # These should be the only ones that need to be modified
@@ -15,7 +16,7 @@ MAIN = game_of_life
 # The compiler program to use
 CC = gcc-8
 # Options to use when compiling object files
-CFLAGS = -Wall -g -std=c99 -pedantic -fopenmp -D DEBUG# -O2
+CFLAGS = -Wall -g -std=c99 -pedantic -fopenmp -D DEBUG -D $(TYPE)# -O2
 # Options to use for the final linking process
 # This one links the math library
 LDLIBS = -lm -fopenmp
