@@ -150,26 +150,28 @@ void boardToParams(onitama_board_t * oniBoard,char * loc){
 	sprintf( (char *)(loc+c), "%s %s;%s %s;%s",oniBoard->cards[0]->name,oniBoard->cards[1]->name,oniBoard->cards[2]->name,oniBoard->cards[3]->name,oniBoard->cards[4]->name);
 }
 
-void initBoard(onitama_board_t * oniBoard){
-	//Alloc Space for board & cards
-	printf("initBoard Start\n");
-	oniBoard->board = malloc(BOARD_SIZE * sizeof(int*)); //Rows
-    for (int c = 0 ; c < BOARD_SIZE ; ++c )       //Cols
-        oniBoard->board[c] = calloc(BOARD_SIZE, sizeof(int)); 
-    printf("BOARD ALLOC\n");
-    oniBoard->cards = calloc( CARDS_PER_BOARD,sizeof(card_t*) );
-    //Set initial Tokens
-    oniBoard->board[0][2] = RED_MASTER  ;
-		oniBoard->board[0][0] = RED_STUDENT ;
-		oniBoard->board[0][1] = RED_STUDENT ;
-		oniBoard->board[0][3] = RED_STUDENT ;
-		oniBoard->board[0][4] = RED_STUDENT ;
+void resetBoard(onitama_board_t * oniBoard){
+	for (int i = 0; i < BOARD_SIZE; ++i)
+		for (int j = 0; j < BOARD_SIZE; ++j)
+			oniBoard->board[i][j] = EMPTY_TOKEN;
+
+	oniBoard->board[0][2] = RED_MASTER  ;
+	oniBoard->board[0][0] = RED_STUDENT ;
+	oniBoard->board[0][1] = RED_STUDENT ;
+	oniBoard->board[0][3] = RED_STUDENT ;
+	oniBoard->board[0][4] = RED_STUDENT ;
 	oniBoard->board[4][2] = BLUE_MASTER ;
-		oniBoard->board[4][0] = BLUE_STUDENT;
-		oniBoard->board[4][1] = BLUE_STUDENT;
-		oniBoard->board[4][3] = BLUE_STUDENT;
-		oniBoard->board[4][4] = BLUE_STUDENT;
-	printf("FILL BOARD\n");
+	oniBoard->board[4][0] = BLUE_STUDENT;
+	oniBoard->board[4][1] = BLUE_STUDENT;
+	oniBoard->board[4][3] = BLUE_STUDENT;
+	oniBoard->board[4][4] = BLUE_STUDENT;
+
+	setRandomCards(oniBoard);
+}
+
+void setRandomCards(onitama_board_t * oniBoard){
+	for (int j = 0; j < CARDS_PER_BOARD; ++j) oniBoard->cards[j] = NULL;
+
 	//Set initial Cards, random without repetition
 	int ix = 0, add, new_num;
 	while (ix < CARDS_PER_BOARD){
@@ -192,7 +194,18 @@ void initBoard(onitama_board_t * oniBoard){
 			ix++;
 		}
 	}
-	printf("RANDOM CARDS SET\n");
+}
+
+void initBoard(onitama_board_t * oniBoard){
+	//Alloc Space for board & cards
+	printf("initBoard Start\n");
+	oniBoard->board = malloc(BOARD_SIZE * sizeof(int*)); //Rows
+    for (int c = 0 ; c < BOARD_SIZE ; ++c )       //Cols
+        oniBoard->board[c] = calloc(BOARD_SIZE, sizeof(int)); 
+    printf("BOARD ALLOC\n");
+    oniBoard->cards = calloc( CARDS_PER_BOARD,sizeof(card_t*) );
+    //Set initial Tokens and cards
+    resetBoard(oniBoard);
 }
 
 void destroyBoard(onitama_board_t * oniBoard){

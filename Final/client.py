@@ -173,6 +173,7 @@ class OnitamaClient(Thread):
                                         playing = (playing+1)%2
                                     gui.board = board
                                 w = board.getWinner()
+                                print(w)
                                 if w:
                                     gui.winner = w
                                     print(f"Winner is {'BLUE' if w==board.BLUE else 'RED'}")

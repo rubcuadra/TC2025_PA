@@ -34,6 +34,8 @@ typedef struct onitama {
 void initOnitama();
 void initBoard(onitama_board_t * oniBoard);
 void destroyBoard(onitama_board_t * oniBoard);
+void resetBoard(onitama_board_t * oniBoard);
+void setRandomCards(onitama_board_t * oniBoard);
 void destroyOnitama();
 void print(onitama_board_t * oniBoard);
 void boardToParams(onitama_board_t * oniBoard,char * loc);

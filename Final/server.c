@@ -626,6 +626,8 @@ void * attentionThread(void * arg)
                                 tt->p1_connection_fd = -1;
                                 tt->p2_connection_fd = -1;
                                 tt->status = EMPTY;
+                                //RESET BOARD
+                                resetBoard(&tt->oni_board);
                             }
 
                             pthread_mutex_unlock(&tt->table_mutex);
