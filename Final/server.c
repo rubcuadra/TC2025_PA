@@ -167,6 +167,18 @@ void startGame(table_t * table){
         {   
             //IF movement was done
             if(move(&table->oni_board,playing==0?BLUE:RED,to_use,fr,fc,tr,tc) == 1){
+                //SEND OK                 -> connections[playing] 
+                printf("MOVEMENT DONE, SENDING OK TO PLAYER THAT PlAYED\n");
+                bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
+                sprintf(buffer, "%d", OK); 
+                if ( send(connections[playing], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+                {
+                    printf("Client disconnected - WAITING MOVEMENT ANSWER\n");
+                    resetTable(table);
+                    //TODO avisar al otro?
+                    return;
+                } 
+                bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
                 usleep(50000); //Delay, es mas rapido aqui que el del cliente
                 //WAIT, CLIENT IS DOING THE MOVEMENT
                 printf("MOVEMENT DONE, SENDING MOVEMENT TO WAITING PLAYER\n");
@@ -178,18 +190,6 @@ void startGame(table_t * table){
                     resetTable(table);
                     return;
                 } 
-                bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
-                //SEND OK                 -> connections[playing] 
-                printf("MOVEMENT DONE, SENDING OK TO PLAYER THAT PlAYED\n");
-                sprintf(buffer, "%d", OK); 
-                if ( send(connections[playing], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
-                {
-                    printf("Client disconnected - WAITING MOVEMENT ANSWER\n");
-                    resetTable(table);
-                    //TODO avisar al otro?
-                    return;
-                } 
-                bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
 
                 //Change Turn
                 playing=(playing+1)%2;
