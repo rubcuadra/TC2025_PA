@@ -27,7 +27,7 @@ def sendAndReturn(s,toSend):
 
 def receive(s):
     d = s.recv(1024)
-    return d.decode('utf-8')[:-1] if d else None#-1 removes \0
+    return d.decode('utf-8')[:-1].replace("\x000","").replace("\x001","") if d else None#-1 removes \0
 
 def getModeFromUser():
     print("Select mode:\n\t1)Play Vs Player\n\t2)Play Vs Computer")
@@ -157,12 +157,13 @@ class OnitamaClient(Thread):
                                             mov_id= MOVEMENT_ID[ans[1]]
                                             tr,tc = ans[2]
                                             if board.canMove( board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc) ):
-                                                if send(s,f"{fr} {fc} {tr} {tc} {mov_id}".encode()): #SEND IT
+                                                ans = send(s,f"{fr} {fc} {tr} {tc} {mov_id}".encode())
+                                                if ans: #SEND IT
                                                     board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
                                                     playing = (playing+1)%2
                                                     break
                                                 else:
-                                                    print("Server error, can't move")  
+                                                    print("Server error, can't move", ans)  
                                             else:
                                                 print("Local error, can't move")  
                                     else: #TODO si se desconecta aqui truena, debemos cachar y decir que se fue
