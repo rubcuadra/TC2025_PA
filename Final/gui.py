@@ -190,6 +190,24 @@ class Onitama_GUI():
             else:                        text = self.opponentTurnText
         self.SCREEN.blit(text,(left,top+GAPSIZE))
 
+    def loadText(self):
+        pygame.font.init()
+        self.font   = pygame.font.SysFont('Comic Sans MS', 30)
+        self.ourTurnText      = self.font.render('Your Turn', False, BLACK)
+        self.opponentTurnText = self.font.render("Waiting for opponent to move ", False, BLACK)
+        self.winnerIsBlueText = self.font.render("GAME OVER, THE WINNER IS BLUE ", False, BLACK)
+        self.winnerIsRedText  = self.font.render("GAME OVER, THE WINNER IS RED ", False, BLACK)
+    
+    def prepareSprites(self):
+        BLUE_MASTER_PNG.convert()
+        RED_MASTER_PNG.convert()
+        BLUE_STUDENT_PNG.convert()
+        RED_STUDENT_PNG.convert()
+        HEADER_PNG.convert()
+        for c in self.board.cards[0]: CARDS_IMG[c].convert()
+        for c in self.board.cards[1]: CARDS_IMG[c].convert()
+        CARDS_IMG[self.board.cards[2]].convert()
+
     def run(self):
         pygame.init()
         self.SCREEN = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
@@ -203,21 +221,9 @@ class Onitama_GUI():
         self.SCREEN.fill(BGCOLOR)
 
         #Onitama Sprites
-        BLUE_MASTER_PNG.convert()
-        RED_MASTER_PNG.convert()
-        BLUE_STUDENT_PNG.convert()
-        RED_STUDENT_PNG.convert()
-        HEADER_PNG.convert()
-        for c in self.board.cards[0]: CARDS_IMG[c].convert()
-        for c in self.board.cards[1]: CARDS_IMG[c].convert()
-        CARDS_IMG[self.board.cards[2]].convert()
+        self.prepareSprites()
         #TEXT
-        pygame.font.init()
-        self.font   = pygame.font.SysFont('Comic Sans MS', 30)
-        self.ourTurnText      = self.font.render('Your Turn', False, BLACK)
-        self.opponentTurnText = self.font.render("Waiting for opponent to move ", False, BLACK)
-        self.winnerIsBlueText = self.font.render("GAME OVER, THE WINNER IS BLUE ", False, BLACK)
-        self.winnerIsRedText  = self.font.render("GAME OVER, THE WINNER IS RED ", False, BLACK)
+        self.loadText()
 
         while not self.done:
             mouseClicked = False
