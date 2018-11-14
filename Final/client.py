@@ -19,7 +19,9 @@ PORT = 8989        # The port used by the server
 #sends toSend and waits for a response, if it matches expectedAnswer it returns True
 def send(s,toSend,expectedAnswer=responses.OK):
     s.sendall(toSend) #PVE or PVP - 1 | 0 
-    return receive(s) == expectedAnswer
+    answ = receive(s)
+    print(answ)
+    return answ == expectedAnswer
 
 def sendAndReturn(s,toSend): 
     s.sendall(toSend) #PVE or PVP - 1 | 0 

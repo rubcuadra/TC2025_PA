@@ -199,6 +199,7 @@ void startGame(table_t * table){
             }else{
                 //SEND MOVEMENT_ERROR -> connections[playing]
                 printf("PLAYER %s SCANNED %d: ERROR TRYING TO MOVE %d %d %d %d %s\n", playing==0?"BLUE":"RED" ,scanned,fr,fc,tr,tc, getCardById(mov_id)->name);
+                print( &table->oni_board );
                 sprintf(buffer, "%d", WRONG_MOVEMENT); 
                 if ( send(connections[playing], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
                 {
@@ -304,7 +305,6 @@ void playVsPlayer(int client_fd, int difficulty){
                     continue;
                 }else{
                     printf("WRONG MOVEMENT %s %s %d %d %d %d\n",player==0?"BLUE":"RED",to_use->name,fr,fc,tr,tc);
-                    print( &onit );
                     sprintf(buffer, "%d", WRONG_MOVEMENT); 
                     if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
                     {
