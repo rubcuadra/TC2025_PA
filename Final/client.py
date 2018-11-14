@@ -134,7 +134,7 @@ class OnitamaClient(Thread):
                                 print("GOT SETUP ",ans)
                             if ans: #We got setup
                                 #Initial SETUP
-                                ans        = ans.replace("\x000","").split(" ")
+                                ans        = ans.split(" ")
                                 we         = int(ans[0]) #0 => BLUE
                                 playing    = 0
                                 board      = OnitamaBoard()
@@ -173,15 +173,13 @@ class OnitamaClient(Thread):
                                         board = board.move( board.BLUE if we==1 else board.RED , (fr,fc), board.getCardById(mov_id), (tr,tc))
                                         playing = (playing+1)%2
                                     gui.board = board
+                                
                                 w = board.getWinner()
-                                print(w)
-                                if w:
-                                    gui.winner = w
-                                    print(f"Winner is {'BLUE' if w==board.BLUE else 'RED'}")
-                                    break
+                                gui.winner = w
+                                print(f"Winner is {'BLUE' if w==board.BLUE else 'RED'}")
+                                break
                             else:
                                 raise Exception("ERROR PLAYING")
-                            
                         else: #ERROR
                             print(ans, "Algo salio mal")
             else:

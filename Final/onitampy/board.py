@@ -99,6 +99,7 @@ class OnitamaBoard():
     #Should call canMove before, otherwise we'll have buggs
     #Returns a new Board
     def move(self, player, fromCell, card, toCell):
+        print(self)
         board = list( map(list, self.board) )
         #Move token
         dest = board[toCell[0]][toCell[1]]
@@ -113,6 +114,7 @@ class OnitamaBoard():
         mr,mb = self._red_is_alive, self._blue_is_alive       #bool
         mbp,mrp = self._blue_master_pos, self._red_master_pos #tuple
         bp, rp = set(self._blue_pos), set(self._red_pos)      #set of tuples
+
         if player is self.BLUE: 
             #Add card
             B.add(SB)
