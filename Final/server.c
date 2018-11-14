@@ -126,10 +126,10 @@ void startGame(table_t * table){
         connections[0] = table->p2_connection_fd;
         connections[1] = table->p1_connection_fd;
     }
-
+    bzero(&buffer, BUFFER_SIZE);
     //SEND players game started, and their colors
     //BLUE 
-    sprintf(buffer, "%d %d %d %d %d %d", BLUE, table->oni_board.cards[0]->id,table->oni_board.cards[1]->id,table->oni_board.cards[2]->id,table->oni_board.cards[3]->id,table->oni_board.cards[4]->id ); //BLUE = 0, RED = 1
+    sprintf(buffer, "%d %d %d %d %d %d", 0, table->oni_board.cards[0]->id,table->oni_board.cards[1]->id,table->oni_board.cards[2]->id,table->oni_board.cards[3]->id,table->oni_board.cards[4]->id ); //BLUE = 0, RED = 1
     if ( send(connections[0], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
     {
         printf("Client disconnected - GAME STARTED\n");
@@ -139,7 +139,7 @@ void startGame(table_t * table){
     } 
     bzero(&buffer, BUFFER_SIZE);          //Clean Buffer
     //RED
-    sprintf(buffer, "%d %d %d %d %d %d", RED, table->oni_board.cards[0]->id,table->oni_board.cards[1]->id,table->oni_board.cards[2]->id,table->oni_board.cards[3]->id,table->oni_board.cards[4]->id ); //BLUE = 0, RED = 1
+    sprintf(buffer, "%d %d %d %d %d %d", 1, table->oni_board.cards[0]->id,table->oni_board.cards[1]->id,table->oni_board.cards[2]->id,table->oni_board.cards[3]->id,table->oni_board.cards[4]->id ); //BLUE = 0, RED = 1
     if ( send(connections[1], buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
     {
         printf("Client disconnected - GAME STARTED\n");
@@ -686,5 +686,6 @@ void onCtrlC(int arg){
 void resetTable(table_t * t){
     t->status = EMPTY;
     t->p1_connection_fd = -1;
-    t->p2_connection_fd = -1;   
+    t->p2_connection_fd = -1; 
+    resetBoard(&tt->oni_board);  
 }

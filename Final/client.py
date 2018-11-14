@@ -136,7 +136,7 @@ class OnitamaClient(Thread):
                             if ans: #We got setup
                                 #Initial SETUP
                                 ans        = ans.split(" ")
-                                if len(ans) > 5:  ans = ans[len(ans)-5:]
+                                if len(ans) > 6:  ans = ans[len(ans)-6:]
                                 we         = int(ans[0]) #0 => BLUE
                                 playing    = 0
                                 board      = OnitamaBoard()
