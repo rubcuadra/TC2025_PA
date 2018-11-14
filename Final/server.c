@@ -687,5 +687,5 @@ void resetTable(table_t * t){
     t->status = EMPTY;
     t->p1_connection_fd = -1;
     t->p2_connection_fd = -1; 
-    resetBoard(&tt->oni_board);  
+    resetBoard(&t->oni_board);  
 }
