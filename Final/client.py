@@ -129,12 +129,14 @@ class OnitamaClient(Thread):
 
                         if (ans.isdigit() and int(ans) == 2) or (' ' in ans): 
                             # GAME STARTS
-                            if ans.isdigit(): #We got number players
+                            print(ans,repr(ans), type(ans))
+                            if ans == '2': #We got number players
                                 ans = receive(s) #GET COLOR AND BOARD
-                                print("GOT SETUP ",ans)
+                                print("GOT SETUP ",ans) 
                             if ans: #We got setup
                                 #Initial SETUP
                                 ans        = ans.split(" ")
+                                if len(ans) > 5:  ans = ans[len(ans)-5:]
                                 we         = int(ans[0]) #0 => BLUE
                                 playing    = 0
                                 board      = OnitamaBoard()
@@ -143,6 +145,7 @@ class OnitamaClient(Thread):
                                 gui.board = board
                                 gui.player = board.BLUE if we==0 else board.RED
                                 START_GUI = 1
+                                print("WE ",we)
                                 while not board.isGameOver():
                                     gui.turn = board.BLUE if playing==0 else board.RED
                                     if we == playing: 
