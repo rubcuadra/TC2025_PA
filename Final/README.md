@@ -18,10 +18,14 @@ The client is written in <b>Python</b> and uses Pygame for the GUI, it is a scri
     ./server 8989
 ```
 
-![Init Server](https://octodex.github.com/images/yaktocat.png)
+![Init Server](https://github.com/rubcuadra/TC2025_PA/blob/master/Final/screenshots/server.png)
 
 * Client: python client.py {SERVER_ADDRESS} {SERVER_PORT}
 
 ```
     python3 client.py 127.0.0.1 8989
 ```
+
+![Init Client](https://github.com/rubcuadra/TC2025_PA/blob/master/Final/screenshots/client.png)
+
+![Board Example](https://github.com/rubcuadra/TC2025_PA/blob/master/Final/screenshots/GUI.png)
