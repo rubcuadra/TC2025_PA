@@ -99,7 +99,6 @@ class OnitamaBoard():
     #Should call canMove before, otherwise we'll have buggs
     #Returns a new Board
     def move(self, player, fromCell, card, toCell):
-        print(self)
         board = list( map(list, self.board) )
         #Move token
         dest = board[toCell[0]][toCell[1]]

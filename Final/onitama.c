@@ -177,11 +177,11 @@ void setRandomCards(onitama_board_t * oniBoard){
 	while (ix < CARDS_PER_BOARD){
 		add = 1;
 		new_num = rand()%NUM_CARDS; //[0,NUM_CARDS)
-		printf("%d %d\n",ix, new_num);
+		// printf("%d %d\n",ix, new_num);
 		//Check that the card is not already in the array
 		for (int j = 0; j < CARDS_PER_BOARD; ++j)
 		{
-			printf("CHECK %d %d\n",j,CARDS_PER_BOARD);
+			// printf("CHECK %d %d\n",j,CARDS_PER_BOARD);
 			if(oniBoard->cards[j] == NULL) break;  //End of array
 			//Already in arr, get other card
 			if( oniBoard->cards[j]->id == new_num) {
@@ -198,11 +198,11 @@ void setRandomCards(onitama_board_t * oniBoard){
 
 void initBoard(onitama_board_t * oniBoard){
 	//Alloc Space for board & cards
-	printf("initBoard Start\n");
+	// printf("initBoard Start\n");
 	oniBoard->board = malloc(BOARD_SIZE * sizeof(int*)); //Rows
     for (int c = 0 ; c < BOARD_SIZE ; ++c )       //Cols
         oniBoard->board[c] = calloc(BOARD_SIZE, sizeof(int)); 
-    printf("BOARD ALLOC\n");
+    // printf("BOARD ALLOC\n");
     oniBoard->cards = calloc( CARDS_PER_BOARD,sizeof(card_t*) );
     //Set initial Tokens and cards
     resetBoard(oniBoard);

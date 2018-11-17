@@ -120,6 +120,8 @@ class OnitamaClient(Thread):
                             if w:
                                 gui.winner = w
                                 print(f"Winner is {'BLUE' if w==board.BLUE else 'RED'}")
+                        else:
+                            print("ERROR", ans)
             elif mode == options.PVP:
                 while True:
                     if send(s,mode): 
