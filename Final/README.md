@@ -29,3 +29,7 @@ The client is written in <b>Python</b> and uses Pygame for the GUI, it is a scri
 ![Init Client](https://github.com/rubcuadra/TC2025_PA/blob/master/Final/screenshots/client.png)
 
 ![Board Example](https://github.com/rubcuadra/TC2025_PA/blob/master/Final/screenshots/GUI.png)
+
+<h3>More</h3>
+
+Read about the project in the [PDF](https://github.com/rubcuadra/TC2025_PA/blob/master/Final/Proposal.pdf)
