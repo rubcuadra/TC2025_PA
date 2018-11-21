@@ -75,13 +75,13 @@ class OnitamaClient(Thread):
             if mode == options.PVE: 
                 if send(s,mode): 
                     difficulty = getDifficultyFromUser()
-                    s.sendall(difficulty) #PVE or PVP - 1 | 0 
-                    ans = receive(s)
-                    if ans != responses.WRONG_DIFFICULTY:
-                        if ans == responses.OK: ans = receive(s)
+                    if send(s,mode):
+                        ans = receive(s)
                         if ans:
+                            print(ans)
                             ans       = ans.split(" ")
                             we        = int(ans[0]) #0 => BLUE
+                            print("WE ",we)
                             playing   = 0
                             board = OnitamaBoard()
                             gui.player= board.BLUE if we==0 else board.RED

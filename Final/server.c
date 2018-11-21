@@ -250,9 +250,10 @@ void playVsPlayer(int client_fd, int difficulty){
     int winner = NO_PLAYER;     //BLUE,RED,NO_PLAYER
     int scanned,fr,fc,tr,tc,mov_id;   //FromRow,FromCol,ToRow,ToCol
     card_t * to_use = NULL;
-    printf("SENDING INFO\n");
+    printf("SENDING INFO, WE %d, PLAYER %d\n",us,player);
     //SEND players his color(turn) and cards
     sprintf(buffer, "%d %d %d %d %d %d", player, onit.cards[0]->id,onit.cards[1]->id,onit.cards[2]->id,onit.cards[3]->id,onit.cards[4]->id ); //BLUE = 0, RED = 1
+    printf("%s\n",buffer);
     if ( send(client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
     {
         printf("Client disconnected - GAME STARTED\n");
