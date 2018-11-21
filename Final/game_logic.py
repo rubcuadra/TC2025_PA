@@ -14,7 +14,7 @@ if __name__ == '__main__':
     op = OnitamaPlayer(player,level)
     movement = op.getBestMovement(board)
     #fromRow,fromCol;MOVEMENT;toRow,toCol
-    print( f"{movement[0][0]} {movement[0][1]} {movement[2][0]} {movement[2][1]} {movement[1]}" )
+    print( "%s %s %s %s %s"%(movement[0][0],movement[0][1],movement[2][0],movement[2][1],movement[1])  )
 
     # board = OnitamaBoard()
     # board.cards[1].pop()

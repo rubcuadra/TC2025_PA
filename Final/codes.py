@@ -7,6 +7,7 @@ class options():
 
 class responses():
     OK = '0'
+    WRONG_DIFFICULTY="26"
 
 BLUE = 0
 RED  = 1

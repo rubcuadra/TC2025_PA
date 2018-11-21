@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/python3
 import socket
 from time import sleep
 from enum import Enum
@@ -75,8 +75,10 @@ class OnitamaClient(Thread):
             if mode == options.PVE: 
                 if send(s,mode): 
                     difficulty = getDifficultyFromUser()
-                    if send(s,difficulty): #NORMAL
-                        ans = receive(s)
+                    s.sendall(difficulty) #PVE or PVP - 1 | 0 
+                    ans = receive(s)
+                    if ans != responses.WRONG_DIFFICULTY:
+                        if ans == responses.OK: ans = receive(s)
                         if ans:
                             ans       = ans.split(" ")
                             we        = int(ans[0]) #0 => BLUE
@@ -88,7 +90,6 @@ class OnitamaClient(Thread):
                             board.setCardsById(ans[1:]) 
                             START_GUI = 1
                             while not board.isGameOver():
-                                
                                 if we == playing: 
                                     while True:
                                         ans = gui.getSelectedMovement()
@@ -100,7 +101,7 @@ class OnitamaClient(Thread):
                                         mov_id = MOVEMENT_ID[ans[1]]
                                         tr,tc  = ans[2]
                                         if board.canMove( board.BLUE if we==0 else board.RED, (fr,fc), ans[1], (tr,tc) ):
-                                            toS = ("%s %s %s %s %s"%(fr,fc,tr,tc,move_id)).encode()
+                                            toS = ("%s %s %s %s %s"%(fr,fc,tr,tc,mov_id)).encode()
                                             print("SENDING ",toS,' - ',ans[1])
                                             if send(s,toS): #SEND IT
                                                 board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
@@ -122,6 +123,8 @@ class OnitamaClient(Thread):
                                 print("Winner is ",'BLUE' if w==board.BLUE else 'RED')
                         else:
                             print("ERROR", ans)
+                    else:
+                        print("ERROR SENDING DIFFICULTY")
             elif mode == options.PVP:
                 while True:
                     if send(s,mode): 

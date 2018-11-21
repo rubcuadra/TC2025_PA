@@ -329,7 +329,7 @@ void playVsPlayer(int client_fd, int difficulty){
         }else{
             printf("COMPUTER\n");
             boardToParams(&onit,boardtext);
-            sprintf( command, "%s %s \"%s\" %d %d","python","game_logic.py",boardtext,us,2);
+            sprintf( command, "%s %s \"%s\" %d %d","python3","game_logic.py",boardtext,us,2);
             printf("%s\n", command);
             FILE *fp; 
             /* Open the command for reading. */
@@ -540,7 +540,12 @@ void * attentionThread(void * arg)
                 t = sscanf(buffer, "%d", &difficulty);    //Read choice
                 bzero(&buffer, BUFFER_SIZE);              //Clean Buffer
                 sprintf(buffer, "%d", t==1?OK:WRONG_DIFFICULTY);     //Matched option
-                sendString(tdt->client_fd, buffer);       //Return answer and continue
+                if ( send(tdt->client_fd, buffer, strlen(buffer)+1, 0) == -1 ) //(from here Client waits GAME_STARTED flag)
+                {
+                    printf("Client disconnected - SENDING DIFFICULTY ANSWER\n");
+                    close(tdt->client_fd);    
+                    pthread_exit(NULL); //we get here with the finish = 1 or interrupted
+                } 
                 printf("STARTING playVsPlayer\n");
                 playVsPlayer(tdt->client_fd, difficulty); //Will call subproc in python
                 finish = 1;
