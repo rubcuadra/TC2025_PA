@@ -225,8 +225,8 @@ class OnitamaBoard():
         toRet = ""
         for i,row in enumerate( self.board ) :
             toRet += "|"
-            for cell in self.board[i]: toRet += f"{cell}|"
+            for cell in self.board[i]: toRet += str(cell)+"|"
             toRet += "\t\t|"
-            for cell in self.board[-(i+1)]: toRet += f"{cell}|"
+            for cell in self.board[-(i+1)]: toRet += str(cell)+"|"
             toRet += "\n"
         return toRet

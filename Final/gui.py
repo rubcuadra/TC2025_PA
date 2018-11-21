@@ -239,6 +239,7 @@ class Onitama_GUI():
                             self.done = True
                     elif event.type == pygame.MOUSEMOTION:
                             mousex, mousey = event.pos
+                            print(mousex,mousey)
                     elif event.type == pygame.MOUSEBUTTONUP:
                             mousex, mousey = event.pos
                             mouseClicked = True

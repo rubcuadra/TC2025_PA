@@ -100,7 +100,7 @@ class OnitamaClient(Thread):
                                         mov_id = MOVEMENT_ID[ans[1]]
                                         tr,tc  = ans[2]
                                         if board.canMove( board.BLUE if we==0 else board.RED, (fr,fc), ans[1], (tr,tc) ):
-                                            toS = f"{fr} {fc} {tr} {tc} {mov_id}".encode()
+                                            toS = ("%s %s %s %s %s"%(fr,fc,tr,tc,move_id)).encode()
                                             print("SENDING ",toS,' - ',ans[1])
                                             if send(s,toS): #SEND IT
                                                 board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
@@ -119,7 +119,7 @@ class OnitamaClient(Thread):
                             w = board.getWinner()
                             if w:
                                 gui.winner = w
-                                print(f"Winner is {'BLUE' if w==board.BLUE else 'RED'}")
+                                print("Winner is ",'BLUE' if w==board.BLUE else 'RED')
                         else:
                             print("ERROR", ans)
             elif mode == options.PVP:
@@ -128,7 +128,7 @@ class OnitamaClient(Thread):
                         table = str(getTableFromUser())
                         ans = sendAndReturn(s,table.encode()) #Num Players or ERROR (numeric)
                         while ans.isdigit() and int(ans) == 1: #Just 1 player in table, wait until server sends us something different
-                            print(f"Waiting for a player to join table {table}")
+                            print("Waiting for a player to join table ",table)
                             ans = receive(s)
 
                         if (ans.isdigit() and int(ans) == 2) or (' ' in ans): 
@@ -164,7 +164,7 @@ class OnitamaClient(Thread):
                                             mov_id= MOVEMENT_ID[ans[1]]
                                             tr,tc = ans[2]
                                             if board.canMove( board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc) ):
-                                                ans = send(s,f"{fr} {fc} {tr} {tc} {mov_id}".encode())
+                                                ans = send(s, ("%s %s %s %s %s"%(fr,fc,tr,tc,move_id)).encode() )
                                                 if ans: #SEND IT
                                                     board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
                                                     playing = (playing+1)%2
@@ -183,7 +183,7 @@ class OnitamaClient(Thread):
                                 
                                 w = board.getWinner()
                                 gui.winner = w
-                                print(f"Winner is {'BLUE' if w==board.BLUE else 'RED'}")
+                                print("Winner is ",'BLUE' if w==board.BLUE else 'RED')
                                 break
                             else:
                                 raise Exception("ERROR PLAYING")
