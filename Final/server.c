@@ -404,7 +404,7 @@ void setupHandlers()
 */
 void initTables(gm_t * gm_data)
 {
-    initOnitama(); //TODO change seed to random
+    initOnitama(); 
 
     //Init stats
     gm_data->total_wins = 0;

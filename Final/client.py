@@ -126,72 +126,70 @@ class OnitamaClient(Thread):
                     else:
                         print("ERROR SENDING DIFFICULTY")
             elif mode == options.PVP:
-                while True:
-                    if send(s,mode): 
-                        table = str(getTableFromUser())
-                        ans = sendAndReturn(s,table.encode()) #Num Players or ERROR (numeric)
-                        while ans.isdigit() and int(ans) == 1: #Just 1 player in table, wait until server sends us something different
-                            print("Waiting for a player to join table ",table)
-                            ans = receive(s)
+                if send(s,mode): 
+                    table = str(getTableFromUser())
+                    ans = sendAndReturn(s,table.encode()) #Num Players or ERROR (numeric)
+                    while ans.isdigit() and int(ans) == 1: #Just 1 player in table, wait until server sends us something different
+                        print("Waiting for a player to join table ",table)
+                        ans = receive(s)
 
-                        if (ans.isdigit() and int(ans) == 2) or (' ' in ans): 
-                            # GAME STARTS
-                            print(ans,repr(ans), type(ans))
-                            if ans == '2': #We got number players
-                                ans = receive(s) #GET COLOR AND BOARD
-                                print("GOT SETUP ",ans) 
-                            if ans: #We got setup
-                                #Initial SETUP
-                                ans        = ans.split(" ")
-                                if len(ans) > 6:  ans = ans[len(ans)-6:]
-                                we         = int(ans[0]) #0 => BLUE
-                                playing    = 0
-                                board      = OnitamaBoard()
-                                board.setCardsById(ans[1:]) 
-                                #START
-                                gui.board = board
-                                gui.player = board.BLUE if we==0 else board.RED
-                                START_GUI = 1
-                                print("WE ",we)
-                                while not board.isGameOver():
-                                    gui.turn = board.BLUE if playing==0 else board.RED
-                                    if we == playing: 
-                                        print("WE MOVE")
-                                        while True:
+                    if (ans.isdigit() and int(ans) == 2) or (' ' in ans): 
+                        # GAME STARTS
+                        print(ans,repr(ans), type(ans))
+                        if ans == '2': #We got number players
+                            ans = receive(s) #GET COLOR AND BOARD
+                            print("GOT SETUP ",ans) 
+                        if ans: #We got setup
+                            #Initial SETUP
+                            ans        = ans.split(" ")
+                            if len(ans) > 6:  ans = ans[len(ans)-6:]
+                            we         = int(ans[0]) #0 => BLUE
+                            playing    = 0
+                            board      = OnitamaBoard()
+                            board.setCardsById(ans[1:]) 
+                            #START
+                            gui.board = board
+                            gui.player = board.BLUE if we==0 else board.RED
+                            START_GUI = 1
+                            print("WE ",we)
+                            while not board.isGameOver():
+                                gui.turn = board.BLUE if playing==0 else board.RED
+                                if we == playing: 
+                                    print("WE MOVE")
+                                    while True:
+                                        ans = gui.getSelectedMovement()
+                                        while ans == None: 
+                                            sleep(0.1)
                                             ans = gui.getSelectedMovement()
-                                            while ans == None: 
-                                                sleep(0.1)
-                                                ans = gui.getSelectedMovement()
-                                            gui.resetMovement()
-                                            fr,fc = ans[0]
-                                            mov_id= MOVEMENT_ID[ans[1]]
-                                            tr,tc = ans[2]
-                                            if board.canMove( board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc) ):
-                                                ans = send(s, ("%s %s %s %s %s"%(fr,fc,tr,tc,move_id)).encode() )
-                                                if ans: #SEND IT
-                                                    board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
-                                                    playing = (playing+1)%2
-                                                    break
-                                                else:
-                                                    print("Server error, can't move", ans)  
+                                        gui.resetMovement()
+                                        fr,fc = ans[0]
+                                        mov_id= MOVEMENT_ID[ans[1]]
+                                        tr,tc = ans[2]
+                                        if board.canMove( board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc) ):
+                                            ans = send(s, ("%s %s %s %s %s"%(fr,fc,tr,tc,mov_id)).encode() )
+                                            if ans: #SEND IT
+                                                board = board.move(board.BLUE if we==0 else board.RED, (fr,fc), board.getCardById(mov_id), (tr,tc))
+                                                playing = (playing+1)%2
+                                                break
                                             else:
-                                                print("Local error, can't move")  
-                                    else: #TODO si se desconecta aqui truena, debemos cachar y decir que se fue
-                                        print("WE WAIT")
-                                        fr,fc,tr,tc,mov_id = [int(c) for c in receive(s).split(" ")] #Convert to int
-                                        print('got',fr,fc,tr,tc,mov_id)
-                                        board = board.move( board.BLUE if we==1 else board.RED , (fr,fc), board.getCardById(mov_id), (tr,tc))
-                                        playing = (playing+1)%2
-                                    gui.board = board
-                                
-                                w = board.getWinner()
-                                gui.winner = w
-                                print("Winner is ",'BLUE' if w==board.BLUE else 'RED')
-                                break
-                            else:
-                                raise Exception("ERROR PLAYING")
-                        else: #ERROR
-                            print(ans, "Algo salio mal")
+                                                print("Server error, can't move", ans)  
+                                        else:
+                                            print("Local error, can't move")  
+                                else: #TODO si se desconecta aqui truena, debemos cachar y decir que se fue
+                                    print("WE WAIT")
+                                    fr,fc,tr,tc,mov_id = [int(c) for c in receive(s).split(" ")] #Convert to int
+                                    print('got',fr,fc,tr,tc,mov_id)
+                                    board = board.move( board.BLUE if we==1 else board.RED , (fr,fc), board.getCardById(mov_id), (tr,tc))
+                                    playing = (playing+1)%2
+                                gui.board = board
+                            
+                            w = board.getWinner()
+                            gui.winner = w
+                            print("Winner is ",'BLUE' if w==board.BLUE else 'RED')
+                        else:
+                            raise Exception("ERROR PLAYING")
+                    else: #ERROR
+                        print(ans, "Algo salio mal")
             else:
                 print("WRONG OPTION, BYE")     
             s.close()
