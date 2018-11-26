@@ -1,3 +1,6 @@
+/*
+    RUBEN CUADRA A01019102
+*/
 #ifndef ONITAMA_H
 #define ONITAMA_H
 

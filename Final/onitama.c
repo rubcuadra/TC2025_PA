@@ -1,3 +1,6 @@
+/*
+    RUBEN CUADRA A01019102
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

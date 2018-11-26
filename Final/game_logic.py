@@ -1,3 +1,4 @@
+#RUBEN CUADRA A01019102
 from onitampy.board import OnitamaBoard
 from onitampy.agent import OnitamaPlayer
 

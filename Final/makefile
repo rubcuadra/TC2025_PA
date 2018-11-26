@@ -1,4 +1,4 @@
-# Simple example of a Makefile
+# RUBEN CUADRA A01019102
 
 ### Variables for this project ###
 # These should be the only ones that need to be modified
