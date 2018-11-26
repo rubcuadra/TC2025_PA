@@ -118,6 +118,7 @@ class OnitamaClient(Thread):
                             print(ans)
                             ans       = ans.split(" ")
                             we        = int(ans[0]) #0 => BLUE
+                            if we != 0: we = 1
                             print("WE ",we)
                             playing   = 0
                             board = OnitamaBoard()
@@ -181,6 +182,7 @@ class OnitamaClient(Thread):
                             ans        = ans.split(" ")
                             if len(ans) > 6:  ans = ans[len(ans)-6:]
                             we         = int(ans[0]) #0 => BLUE | RED
+                            if we != 0: we = 1
                             board      = OnitamaBoard()
                             board.setCardsById(ans[1:]) 
                             #START

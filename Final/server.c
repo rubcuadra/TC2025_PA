@@ -119,7 +119,7 @@ void startGame(table_t * table){
     int scanned,fr,fc,tr,tc,mov_id;   //FromRow,FromCol,ToRow,ToCol
     card_t * to_use = NULL;
 
-    if(rand()%2){
+    if(1){//rand()%2){ //First one to sit will be the first one to move, with random it changes (PvE)
         connections[0] = table->p1_connection_fd;
         connections[1] = table->p2_connection_fd;
     }else{

@@ -32,4 +32,4 @@ The client is written in <b>Python</b> and uses Pygame for the GUI, it is a scri
 
 <h3>More</h3>
 
-Read about the project in the [PDF](https://github.com/rubcuadra/TC2025_PA/blob/master/Final/Proposal.pdf)
+Read about the project in the [PDF](https://github.com/rubcuadra/TC2025_PA/blob/master/Final/man.pdf)
