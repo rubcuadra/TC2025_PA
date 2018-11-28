@@ -1,4 +1,8 @@
-# RUBEN CUADRA A01019102
+
+# RUBEN CUADRA 
+# DAVID GAONA
+# code to run a server that manages game boards of the Onitama game
+
 
 ### Variables for this project ###
 # These should be the only ones that need to be modified

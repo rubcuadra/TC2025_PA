@@ -1,4 +1,6 @@
-#RUBEN CUADRA A01019102
+#RUBEN CUADRA 
+#DAVID GAONA
+#code to run a server that manages game boards of the Onitama game
 class options():
     PVE = b'0'
     PVP = b'1'

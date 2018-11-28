@@ -1,4 +1,8 @@
-// Ruben Cuadra A01019102
+/*
+    RUBEN CUADRA 
+    DAVID GAONA
+    code to run a server that manages game boards of the Onitama game
+*/
 typedef enum valid_options {PVE, PVP, EXIT} ops_t;
 typedef enum valid_responses {OK, BYE, ERROR=24, WRONG_TABLE=25, WRONG_DIFFICULTY=26,WRONG_MOVEMENT=27,WRONG_CARD=28, GAME_STARTED} response_t;
 typedef enum valid_tables {RANDOM_TABLE = -1} vt; 

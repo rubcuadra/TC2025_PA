@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-#RUBEN CUADRA A01019102
+#RUBEN CUADRA 
+#DAVID GAONA
+#code to run a server that manages game boards of the Onitama game
 import socket
 from time import sleep
 from enum import Enum
